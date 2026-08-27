@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generic API Tester</title>
+
+<style>
+:root{
+  --bg:#f3f5f8;
+  --panel:#fff;
+  --line:#d8dde5;
+  --muted:#66707d;
+  --primary:#1f6feb;
+  --code:#111827;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  padding:20px;
+  font-family:"Segoe UI","Yu Gothic UI",sans-serif;
+  background:var(--bg);
+  color:#222;
+}
+.app{max-width:1500px;margin:auto}
+.topbar{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  flex-wrap:wrap;
+  margin-bottom:14px;
+}
+
+.toolbar{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  margin-bottom:14px;
+}
+
+.toolbar-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+
+.toolbar-row-primary .asset-group{
+  margin-left:auto;
+}
+
+.title-group{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.topbar h1{
+  font-size:22px;
+  margin:0;
+}
+
+.asset-group{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+#assetSelect{
+  width:260px;
+  min-width:220px;
+  max-width:320px;
+}
+
+#reloadAssets{
+  white-space:nowrap;
+}
+
+#readmeButton{
+  white-space:nowrap;
+}
+.grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+}
+.tile{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:14px;
+  min-width:0;
+}
+.tile h2{font-size:16px;margin:0 0 12px}
+.row{
+  display:grid;
+  grid-template-columns:145px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  margin-bottom:9px;
+}
+input,select,textarea{
+  width:100%;
+  padding:7px 8px;
+  border:1px solid #b8c0cb;
+  border-radius:4px;
+  background:#fff;
+}
+textarea{
+  min-height:120px;
+  resize:vertical;
+  font:13px Consolas,monospace;
+}
+button{
+  padding:7px 12px;
+  border:1px solid #9da6b2;
+  border-radius:4px;
+  background:#fff;
+  cursor:pointer;
+}
+button.primary{
+  background:var(--primary);
+  color:#fff;
+  border-color:var(--primary);
+}
+button:disabled{opacity:.55;cursor:default}
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.param-group{
+  border:1px solid #e1e5ea;
+  border-radius:6px;
+  padding:10px;
+  margin-bottom:8px;
+}
+.param-group-title{
+  font-weight:700;
+  margin-bottom:8px;
+}
+.param-group .param-group{
+  margin-left:18px;
+  background:#fafbfc;
+}
+.param-leaf{
+  display:grid;
+  grid-template-columns:180px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+  margin-bottom:7px;
+}
+.param-leaf:last-child{margin-bottom:0}
+.status{
+  padding:9px 10px;
+  background:#eef1f5;
+  border-radius:5px;
+  font:13px Consolas,monospace;
+  white-space:pre-wrap;
+}
+pre{
+  margin:0;
+  background:var(--code);
+  color:#e5e7eb;
+  padding:12px;
+  border-radius:6px;
+  min-height:210px;
+  max-height:460px;
+  overflow:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
+  font:13px Consolas,monospace;
+}
+details{
+  border-top:1px solid var(--line);
+  margin-top:12px;
+  padding-top:8px;
+}
+summary{
+  cursor:pointer;
+  font-weight:600;
+  color:#39424e;
+  user-select:none;
+}
+.header-table{
+  width:100%;
+  border-collapse:collapse;
+}
+.header-table th,
+.header-table td{
+  border-bottom:1px solid #e5e8ed;
+  padding:5px;
+  text-align:left;
+}
+.small{font-size:12px;color:var(--muted)}
+.badge{
+  display:inline-block;
+  font-size:11px;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#eef1f5;
+  margin-left:5px;
+}
+
+.modal-backdrop{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.45);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  z-index:1000;
+}
+.modal-backdrop.open{
+  display:flex;
+}
+.modal{
+  width:min(1100px,96vw);
+  max-height:90vh;
+  background:#fff;
+  border-radius:10px;
+  box-shadow:0 20px 60px rgba(0,0,0,.25);
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+.modal-header{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:12px 14px;
+  border-bottom:1px solid var(--line);
+}
+.modal-header h2{
+  margin:0;
+  font-size:17px;
+  flex:1;
+}
+.modal-body{
+  padding:18px;
+  overflow:auto;
+  line-height:1.65;
+}
+.modal-body h1,
+.modal-body h2,
+.modal-body h3{
+  margin-top:1.4em;
+}
+.modal-body h1:first-child,
+.modal-body h2:first-child,
+.modal-body h3:first-child{
+  margin-top:0;
+}
+.modal-body pre{
+  min-height:0;
+  max-height:none;
+  white-space:pre;
+}
+.modal-body code{
+  font-family:Consolas,monospace;
+  background:#eef1f5;
+  padding:1px 4px;
+  border-radius:3px;
+}
+.modal-body pre code{
+  background:transparent;
+  padding:0;
+}
+.modal-body table{
+  width:100%;
+  border-collapse:collapse;
+  margin:12px 0;
+}
+.modal-body th,
+.modal-body td{
+  border:1px solid #d8dde5;
+  padding:6px 8px;
+  text-align:left;
+}
+.modal-body blockquote{
+  margin:12px 0;
+  padding:8px 12px;
+  border-left:4px solid #ccd3dd;
+  background:#f7f8fa;
+}
+
+#paramsArea{
+  height:250px;
+  min-height:250px;
+  max-height:250px;
+  overflow:auto;
+  padding-right:4px;
+}
+
+@media(max-width:900px){
+  body{padding:10px}
+  .grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<div class="toolbar">
+
+  <div class="toolbar-row toolbar-row-primary">
+    <div class="title-group">
+      <h1>Generic API Tester</h1>
+      <button id="readmeButton">README</button>
+    </div>
+
+    <div class="asset-group">
+      <label for="assetSelect">API定義</label>
+      <select id="assetSelect"></select>
+      <button id="reloadAssets">定義再読込</button>
+    </div>
+  </div>
+
+  <div class="toolbar-row toolbar-row-save">
+    <input id="saveName" type="text" placeholder="保存名" style="max-width:180px">
+    <button id="saveRequest">保存</button>
+
+    <select id="savedRequests" style="max-width:220px"></select>
+    <button id="loadRequest">読込</button>
+    <button id="deleteRequest">削除</button>
+
+    <button id="exportRequest">ファイル保存</button>
+    <button id="importRequest">ファイル読込</button>
+    <input id="importFile" type="file" accept="application/json,.json" hidden>
+  </div>
+
+  <div class="toolbar-row toolbar-row-history">
+    <select id="historySelect" style="max-width:320px">
+      <option value="">実行履歴を選択</option>
+    </select>
+    <button id="loadHistory">履歴読込</button>
+    <button id="deleteHistory">履歴1件削除</button>
+    <button id="clearHistory">履歴全削除</button>
+  </div>
+
+</div>
+
+<div class="grid">
+
+<section class="tile">
+  <h2>リクエスト</h2>
+
+  <div class="row">
+    <label>HTTPメソッド</label>
+    <input id="method" type="text" readonly>
+  </div>
+
+  <div class="row">
+    <label>送信形式</label>
+    <input id="bodyType" type="text" readonly>
+  </div>
+
+  <div class="row">
+    <label>パラメータ位置</label>
+    <input id="paramLocation" type="text" readonly>
+  </div>
+
+  <div class="row">
+    <label>アクセス先URL</label>
+    <input id="url" type="text" readonly>
+  </div>
+
+  <details id="headerDetails">
+    <summary>
+      HTTPヘッダー
+      <span id="headerCount" class="badge">0</span>
+    </summary>
+
+    <table class="header-table">
+      <thead>
+        <tr>
+          <th>キー</th>
+          <th>値</th>
+        </tr>
+      </thead>
+      <tbody id="headersBody"></tbody>
+    </table>
+  </details>
+</section>
+
+<section class="tile">
+  <h2>パラメータ</h2>
+
+  <div id="paramsArea"></div>
+
+  <p class="small">
+    パラメータ構造は assets/api-assets.json の children で定義します。
+    画面では末端項目だけ入力します。
+  </p>
+</section>
+
+<section class="tile">
+  <h2>送信内容</h2>
+
+  <textarea id="body" readonly></textarea>
+
+  <div class="actions">
+    <button id="preview">送信内容を生成</button>
+    <button id="copyBody">送信内容をコピー</button>
+    <button id="execute" class="primary">API実行</button>
+    <button id="clear">結果クリア</button>
+  </div>
+
+  <h2 style="margin-top:14px">状態</h2>
+  <div id="status" class="status">待機中</div>
+</section>
+
+<section class="tile">
+  <h2>レスポンス</h2>
+  <pre id="response">(未実行)</pre>
+
+  <div class="actions">
+    <button id="copyResponse">レスポンスをコピー</button>
+  </div>
+</section>
+
+</div>
+</div>
+
+
+
+<div id="confirmModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(520px,94vw)">
+    <div class="modal-header">
+      <h2 id="confirmTitle">確認</h2>
+    </div>
+
+    <div class="modal-body">
+      <p id="confirmMessage"></p>
+
+      <div class="actions" style="justify-content:flex-end">
+        <button id="confirmCancel">キャンセル</button>
+        <button id="confirmOk" class="primary">OK</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="readmeModal" class="modal-backdrop" aria-hidden="true">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="readmeTitle">
+    <div class="modal-header">
+      <h2 id="readmeTitle">README.md</h2>
+      <button id="closeReadme">閉じる</button>
+    </div>
+    <div id="readmeContent" class="modal-body">
+      読み込み中...
+    </div>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+const ASSET_URL="./assets/api-assets.json";
+let API_ASSETS={};
+const $=id=>document.getElementById(id);
+
+function parseSimple(value){
+  const raw=String(value==null?"":value);
+  const s=raw.trim();
+  if(s==="") return "";
+  if(s==="true") return true;
+  if(s==="false") return false;
+  if(s==="null") return null;
+  if(/^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(s)){
+    if(/^[-+]?0\d+$/.test(s)) return raw;
+    return Number(s);
+  }
+  return raw;
+}
+
+function clone(v){ return JSON.parse(JSON.stringify(v)); }
+
+function normalizeNode(node){
+  const n=clone(node);
+  if(!n.type){
+    if(Array.isArray(n.children)) n.type="object";
+    else if(Array.isArray(n.value)) n.type="array-legacy";
+    else n.type="value";
+  }
+  return n;
+}
+
+function renderHeaders(headers){
+  $("headersBody").innerHTML="";
+  Object.entries(headers||{}).forEach(([k,v])=>{
+    const tr=document.createElement("tr");
+    const a=document.createElement("td"); a.textContent=k;
+    const b=document.createElement("td"); b.textContent=v;
+    tr.append(a,b); $("headersBody").appendChild(tr);
+  });
+  $("headerCount").textContent=Object.keys(headers||{}).length;
+  $("headerDetails").open=false;
+}
+
+function createValueControl(node){
+  const row=document.createElement("div");
+  row.className="param-leaf";
+  const label=document.createElement("label");
+  label.textContent=node.label || node.name || "値";
+  const input=document.createElement("input");
+  input.type="text";
+  input.className="node-value";
+  input.value=node.value==null?"":String(node.value);
+  input.placeholder=node.placeholder||"";
+  row.append(label,input);
+  return row;
+}
+
+function createNode(node, isArrayItem=false){
+  node=normalizeNode(node);
+
+  if(node.enabled===false){
+    const hidden=document.createElement("div");
+    hidden.dataset.disabled="1";
+    return hidden;
+  }
+
+  const wrap=document.createElement("div");
+  wrap.className="api-node";
+  wrap.dataset.nodeType=node.type;
+  wrap.dataset.nodeName=node.name||"";
+
+  if(node.type==="value"){
+    wrap.appendChild(createValueControl(node));
+    return wrap;
+  }
+
+  if(node.type==="array-legacy"){
+    const legacy={
+      name:node.name,
+      label:node.label,
+      type:"array",
+      item:{type:"value",value:""},
+      initialItems:node.value.length
+    };
+    const w=createNode(legacy,isArrayItem);
+    const items=w.querySelectorAll(":scope > .array-items > .array-item .node-value");
+    node.value.forEach((v,i)=>{ if(items[i]) items[i].value=String(v); });
+    return w;
+  }
+
+  const group=document.createElement("div");
+  group.className="param-group";
+
+  const title=document.createElement("div");
+  title.className="param-group-title";
+  title.textContent=node.label || node.name || (node.type==="array"?"配列":"オブジェクト");
+  group.appendChild(title);
+
+  if(node.type==="object"){
+    const children=document.createElement("div");
+    children.className="object-children";
+    (node.children||[]).forEach(child=>{
+      if(child.enabled!==false) children.appendChild(createNode(child));
+    });
+    group.appendChild(children);
+    wrap.appendChild(group);
+    return wrap;
+  }
+
+  if(node.type==="array"){
+    wrap.dataset.itemTemplate=JSON.stringify(node.item||{type:"value",value:""});
+
+    const items=document.createElement("div");
+    items.className="array-items";
+    group.appendChild(items);
+
+    const actions=document.createElement("div");
+    actions.className="actions";
+    const add=document.createElement("button");
+    add.type="button";
+    add.textContent="＋追加";
+    add.className="array-add";
+    add.onclick=()=>addArrayItem(wrap);
+    actions.appendChild(add);
+    group.appendChild(actions);
+
+    wrap.appendChild(group);
+
+    const count=Math.max(0,Number(node.initialItems||0));
+    for(let i=0;i<count;i++) addArrayItem(wrap);
+
+    return wrap;
+  }
+
+  throw new Error("未対応type: "+node.type);
+}
+
+function addArrayItem(arrayNode){
+  const items=arrayNode.querySelector(":scope > .param-group > .array-items");
+  const template=JSON.parse(arrayNode.dataset.itemTemplate);
+  const item=document.createElement("div");
+  item.className="array-item param-group";
+
+  const head=document.createElement("div");
+  head.className="param-group-title";
+
+  const title=document.createElement("span");
+  title.className="array-item-title";
+
+  const remove=document.createElement("button");
+  remove.type="button";
+  remove.textContent="削除";
+  remove.style.float="right";
+  remove.onclick=()=>{
+    item.remove();
+    renumberArray(arrayNode);
+  };
+
+  head.append(title,remove);
+  item.appendChild(head);
+  item.appendChild(createNode(template,true));
+  items.appendChild(item);
+  renumberArray(arrayNode);
+}
+
+function renumberArray(arrayNode){
+  const items=arrayNode.querySelectorAll(":scope > .param-group > .array-items > .array-item");
+  items.forEach((item,i)=>{
+    item.querySelector(":scope > .param-group-title > .array-item-title").textContent="要素 "+(i+1);
+  });
+}
+
+function renderParams(params){
+  $("paramsArea").innerHTML="";
+  (params||[]).forEach(p=>{
+    if(p.enabled!==false) $("paramsArea").appendChild(createNode(p));
+  });
+}
+
+function nodeValue(node){
+  const type=node.dataset.nodeType;
+
+  if(type==="value"){
+    const input=node.querySelector(":scope .node-value");
+    const raw=input.value;
+    if(raw.trim()==="") return {present:false,value:null};
+    return {present:true,value:parseSimple(raw)};
+  }
+
+  if(type==="object"){
+    const obj={};
+    const children=node.querySelector(":scope > .param-group > .object-children");
+    for(const child of children.children){
+      if(!child.classList.contains("api-node")) continue;
+      const r=nodeValue(child);
+      const name=child.dataset.nodeName;
+      if(r.present && name) obj[name]=r.value;
+    }
+    return {present:Object.keys(obj).length>0,value:obj};
+  }
+
+  if(type==="array"){
+    const arr=[];
+    const items=node.querySelectorAll(":scope > .param-group > .array-items > .array-item");
+    for(const item of items){
+      const child=item.querySelector(":scope > .api-node");
+      const r=nodeValue(child);
+      if(r.present) arr.push(r.value);
+    }
+    return {present:arr.length>0,value:arr};
+  }
+
+  return {present:false,value:null};
+}
+
+
+function generateUuid(){
+  if(
+    window.crypto &&
+    typeof window.crypto.randomUUID==="function"
+  ){
+    return window.crypto.randomUUID();
+  }
+
+  const bytes=new Uint8Array(16);
+
+  if(window.crypto && window.crypto.getRandomValues){
+    window.crypto.getRandomValues(bytes);
+  }else{
+    for(let i=0;i<bytes.length;i++){
+      bytes[i]=Math.floor(Math.random()*256);
+    }
+  }
+
+  bytes[6]=(bytes[6]&0x0f)|0x40;
+  bytes[8]=(bytes[8]&0x3f)|0x80;
+
+  const hex=Array.from(
+    bytes,
+    b=>b.toString(16).padStart(2,"0")
+  );
+
+  return [
+    hex.slice(0,4).join(""),
+    hex.slice(4,6).join(""),
+    hex.slice(6,8).join(""),
+    hex.slice(8,10).join(""),
+    hex.slice(10,16).join("")
+  ].join("-");
+}
+
+function formatDateTime(date,format,timezone){
+  const utc=String(timezone||"local").toLowerCase()==="utc";
+
+  const year=utc ? date.getUTCFullYear() : date.getFullYear();
+  const month=(utc ? date.getUTCMonth() : date.getMonth())+1;
+  const day=utc ? date.getUTCDate() : date.getDate();
+  const hour=utc ? date.getUTCHours() : date.getHours();
+  const minute=utc ? date.getUTCMinutes() : date.getMinutes();
+  const second=utc ? date.getUTCSeconds() : date.getSeconds();
+  const ms=utc ? date.getUTCMilliseconds() : date.getMilliseconds();
+
+  const values={
+    yyyy:String(year).padStart(4,"0"),
+    MM:String(month).padStart(2,"0"),
+    dd:String(day).padStart(2,"0"),
+    HH:String(hour).padStart(2,"0"),
+    mm:String(minute).padStart(2,"0"),
+    ss:String(second).padStart(2,"0"),
+    SSS:String(ms).padStart(3,"0")
+  };
+
+  let result=format || "yyyy-MM-dd HH:mm:ss";
+
+  // Single quotes are literal delimiters, e.g. 'T' and 'Z'.
+  result=result.replace(/'([^']*)'/g,"$1");
+
+  return result.replace(
+    /yyyy|SSS|MM|dd|HH|mm|ss/g,
+    token=>values[token]
+  );
+}
+
+function generateSpecialValue(node){
+  const special=(node.dataset.special||"").toLowerCase();
+
+  if(!special){
+    return null;
+  }
+
+  if(special==="uuid"){
+    let value=generateUuid();
+    const format=(node.dataset.specialFormat||"default").toLowerCase();
+
+    if(format==="compact"){
+      value=value.replace(/-/g,"");
+    }else if(format!=="default" && format!==""){
+      throw new Error(
+        "未対応のUUID formatです: "+format
+      );
+    }
+
+    return value;
+  }
+
+  if(special==="datetime"){
+    const timezone=(node.dataset.specialTimezone||"local").toLowerCase();
+
+    if(timezone!=="local" && timezone!=="utc"){
+      throw new Error(
+        "未対応のdatetime timezoneです: "+timezone
+      );
+    }
+
+    return formatDateTime(
+      new Date(),
+      node.dataset.specialFormat||"yyyy-MM-dd HH:mm:ss",
+      timezone
+    );
+  }
+
+  throw new Error(
+    "未対応のspecialです: "+special
+  );
+}
+
+function applySpecialValues(){
+  const nodes=$("paramsArea").querySelectorAll(
+    '.api-node[data-node-type="value"][data-special]:not([data-special=""])'
+  );
+
+  for(const node of nodes){
+    const value=generateSpecialValue(node);
+    const input=node.querySelector(":scope .node-value");
+
+    if(input && value!==null){
+      input.value=value;
+    }
+  }
+}
+
+function buildParams(){
+  const obj={};
+  for(const node of $("paramsArea").children){
+    if(!node.classList.contains("api-node")) continue;
+    const r=nodeValue(node);
+    const name=node.dataset.nodeName;
+    if(r.present && name) obj[name]=r.value;
+  }
+  return obj;
+}
+
+function flattenBracket(value,prefix,pairs){
+  if(Array.isArray(value)){
+    value.forEach((v,i)=>flattenBracket(v,`${prefix}[${i}]`,pairs));
+  }else if(value!==null && typeof value==="object"){
+    Object.entries(value).forEach(([k,v])=>flattenBracket(v,`${prefix}[${k}]`,pairs));
+  }else{
+    pairs.push([prefix,value==null?"":String(value)]);
+  }
+}
+
+function buildPairs(obj,serialization){
+  const pairs=[];
+  if(serialization==="json-value"){
+    Object.entries(obj).forEach(([k,v])=>pairs.push([k,(v!==null&&typeof v==="object")?JSON.stringify(v):String(v)]));
+  }else if(serialization==="repeat"){
+    Object.entries(obj).forEach(([k,v])=>{
+      if(Array.isArray(v)) v.forEach(x=>pairs.push([k,(x!==null&&typeof x==="object")?JSON.stringify(x):String(x)]));
+      else if(v!==null&&typeof v==="object") pairs.push([k,JSON.stringify(v)]);
+      else pairs.push([k,v==null?"":String(v)]);
+    });
+  }else{
+    Object.entries(obj).forEach(([k,v])=>flattenBracket(v,k,pairs));
+  }
+  return pairs;
+}
+
+function encodePairs(pairs){
+  return pairs.map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&");
+}
+
+function prepareRequest(){
+  const asset=API_ASSETS[$("assetSelect").value];
+  const params=buildParams();
+  const method=(asset.method||"GET").toUpperCase();
+  const paramLocation=asset.paramLocation||(method==="GET"?"query":"body");
+  const bodyType=asset.bodyType||(method==="GET"?"none":"json");
+  const serialization=asset.serialization||"native";
+  const headers=Object.assign({},asset.headers||{});
+  let url=asset.url||"", body=undefined;
+
+  if(paramLocation==="query"){
+    const q=encodePairs(buildPairs(params,serialization==="native"?"bracket":serialization));
+    if(q) url+=(url.includes("?")?"&":"?")+q;
+  }else if(paramLocation==="body"){
+    if(bodyType==="json"){
+      body=JSON.stringify(params);
+      if(!headers["Content-Type"]) headers["Content-Type"]="application/json; charset=UTF-8";
+    }else if(bodyType==="form"){
+      body=encodePairs(buildPairs(params,serialization==="native"?"bracket":serialization));
+      if(!headers["Content-Type"]) headers["Content-Type"]="application/x-www-form-urlencoded; charset=UTF-8";
+    }else if(bodyType==="raw"){
+      body=$("body").value;
+    }
+  }
+  return {asset,params,method,paramLocation,bodyType,serialization,url,headers,body};
+}
+
+function showPreview(){
+  try{
+    applySpecialValues();
+    const p=prepareRequest();
+    $("url").value=p.url;
+    if(p.paramLocation==="query") $("body").value=p.url;
+    else if(p.bodyType==="json") $("body").value=JSON.stringify(p.params,null,2);
+    else $("body").value=p.body||"";
+  }catch(e){ alert(e.message); }
+}
+
+async function execute(){
+  let p;
+
+  try{
+    applySpecialValues();
+    p=prepareRequest();
+
+    // API実行時は必ず実際の送信内容を画面へ反映する。
+    $("url").value=p.url;
+
+    if(p.paramLocation==="query"){
+      $("body").value=p.url;
+    }else if(p.bodyType==="json"){
+      $("body").value=JSON.stringify(
+        p.params,
+        null,
+        2
+      );
+    }else{
+      $("body").value=p.body || "";
+    }
+
+  }catch(e){
+    $("status").textContent=
+      "入力エラー: "+e.message;
+    return;
+  }
+
+  if(!p.url){
+    $("status").textContent=
+      "アクセス先URLが未設定です";
+    return;
+  }
+
+  $("execute").disabled=true;
+  $("status").textContent="リクエスト中...";
+  $("response").textContent="";
+
+  const started=performance.now();
+
+  try{
+    const response=await fetch("/proxy",{
+      method:"POST",
+      headers:{
+        "X-Proxy-Target":p.url,
+        "X-Proxy-Method":p.method,
+        "X-Proxy-Headers":JSON.stringify(p.headers)
+      },
+      body:p.body
+    });
+
+    const text=await response.text();
+
+    let display=text;
+
+    try{
+      display=JSON.stringify(
+        JSON.parse(text),
+        null,
+        2
+      );
+    }catch(e){}
+
+    $("response").textContent=display;
+
+    addHistory({
+      assetKey:$("assetSelect").value,
+      params:p.params,
+      url:p.url,
+      method:p.method,
+      headers:p.headers,
+
+      // 画面表示と実送信内容を一致させる。
+      body:$("body").value,
+
+      responseText:display,
+      status:response.status,
+      statusText:response.statusText,
+      elapsedSeconds:Number(
+        (
+          (performance.now()-started)/1000
+        ).toFixed(3)
+      ),
+      executedAt:new Date().toISOString()
+    });
+
+    $("status").textContent=
+      `HTTP ${response.status} ${response.statusText} / ${((performance.now()-started)/1000).toFixed(3)} 秒`;
+
+  }catch(e){
+    $("status").textContent=
+      "通信エラー: "+e;
+
+    $("response").textContent=
+      String(e);
+
+  }finally{
+    $("execute").disabled=false;
+  }
+}
+
+function loadAsset(name){
+  const asset=API_ASSETS[name];
+  if(!asset) return;
+  $("method").value=asset.method||"GET";
+  $("bodyType").value=asset.bodyType||"none";
+  $("paramLocation").value=asset.paramLocation||"";
+  $("url").value=asset.url||"";
+  renderHeaders(asset.headers||{});
+  renderParams(asset.params||[]);
+  $("body").value="";
+  $("response").textContent="(未実行)";
+  $("status").textContent="定義読込: "+(asset.label||name);
+}
+
+function populateAssetSelect(){
+  $("assetSelect").innerHTML="";
+  Object.entries(API_ASSETS).forEach(([key,a])=>{
+    const o=document.createElement("option");
+    o.value=key; o.textContent=a.label||key;
+    $("assetSelect").appendChild(o);
+  });
+}
+
+async function loadAssets(){
+  $("status").textContent="API定義を読み込み中...";
+  const r=await fetch(ASSET_URL+"?t="+Date.now());
+  if(!r.ok) throw new Error("api-assets.json 読込失敗: HTTP "+r.status);
+  API_ASSETS=await r.json();
+  populateAssetSelect();
+  const first=Object.keys(API_ASSETS)[0];
+  if(first){ $("assetSelect").value=first; loadAsset(first); }
+}
+
+
+async function copyToClipboard(text,label){
+  if(!text){
+    $("status").textContent=label+"する内容がありません";
+    return;
+  }
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(text);
+    }else{
+      const area=document.createElement("textarea");
+      area.value=text;
+      area.style.position="fixed";
+      area.style.left="-9999px";
+      area.style.top="-9999px";
+      document.body.appendChild(area);
+      area.focus();
+      area.select();
+
+      const ok=document.execCommand("copy");
+      area.remove();
+
+      if(!ok){
+        throw new Error("clipboard copy failed");
+      }
+    }
+
+    $("status").textContent=label+"しました";
+  }catch(e){
+    $("status").textContent="コピー失敗: "+e.message;
+  }
+}
+
+
+function escapeHtml(text){
+  return String(text)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;");
+}
+
+function renderInlineMarkdown(text){
+  let s=escapeHtml(text);
+
+  s=s.replace(/`([^`]+)`/g,"<code>$1</code>");
+  s=s.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
+  s=s.replace(/\*([^*]+)\*/g,"<em>$1</em>");
+
+  return s;
+}
+
+function renderMarkdown(markdown){
+  const lines=markdown.replace(/\r\n?/g,"\n").split("\n");
+  let html=[];
+  let inCode=false;
+  let code=[];
+  let listType=null;
+
+  function closeList(){
+    if(listType){
+      html.push(`</${listType}>`);
+      listType=null;
+    }
+  }
+
+  function flushCode(){
+    if(inCode){
+      html.push(
+        "<pre><code>"+
+        escapeHtml(code.join("\n"))+
+        "</code></pre>"
+      );
+      code=[];
+      inCode=false;
+    }
+  }
+
+  for(const line of lines){
+    if(line.startsWith("```")){
+      closeList();
+
+      if(inCode){
+        flushCode();
+      }else{
+        inCode=true;
+        code=[];
+      }
+
+      continue;
+    }
+
+    if(inCode){
+      code.push(line);
+      continue;
+    }
+
+    let m;
+
+    if((m=line.match(/^(#{1,6})\s+(.*)$/))){
+      closeList();
+      const level=m[1].length;
+      html.push(
+        `<h${level}>${renderInlineMarkdown(m[2])}</h${level}>`
+      );
+      continue;
+    }
+
+    if((m=line.match(/^\s*[-*]\s+(.*)$/))){
+      if(listType!=="ul"){
+        closeList();
+        listType="ul";
+        html.push("<ul>");
+      }
+      html.push(`<li>${renderInlineMarkdown(m[1])}</li>`);
+      continue;
+    }
+
+    if((m=line.match(/^\s*\d+\.\s+(.*)$/))){
+      if(listType!=="ol"){
+        closeList();
+        listType="ol";
+        html.push("<ol>");
+      }
+      html.push(`<li>${renderInlineMarkdown(m[1])}</li>`);
+      continue;
+    }
+
+    if((m=line.match(/^>\s?(.*)$/))){
+      closeList();
+      html.push(
+        `<blockquote>${renderInlineMarkdown(m[1])}</blockquote>`
+      );
+      continue;
+    }
+
+    if(/^\s*$/.test(line)){
+      closeList();
+      html.push("");
+      continue;
+    }
+
+    closeList();
+    html.push(`<p>${renderInlineMarkdown(line)}</p>`);
+  }
+
+  closeList();
+  flushCode();
+
+  return html.join("\n");
+}
+
+async function openReadme(){
+  $("readmeModal").classList.add("open");
+  $("readmeModal").setAttribute("aria-hidden","false");
+  $("readmeContent").textContent="読み込み中...";
+
+  try{
+    const response=await fetch("/readme?t="+Date.now());
+
+    if(!response.ok){
+      throw new Error(
+        "README.md 読込失敗: HTTP "+response.status
+      );
+    }
+
+    const markdown=await response.text();
+    $("readmeContent").innerHTML=renderMarkdown(markdown);
+
+  }catch(e){
+    $("readmeContent").textContent=
+      "README読込エラー: "+e.message;
+  }
+}
+
+function closeReadme(){
+  $("readmeModal").classList.remove("open");
+  $("readmeModal").setAttribute("aria-hidden","true");
+}
+
+$("readmeButton").onclick=openReadme;
+$("closeReadme").onclick=closeReadme;
+
+$("readmeModal").onclick=e=>{
+  if(e.target===$("readmeModal")){
+    closeReadme();
+  }
+};
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    closeReadme();
+  }
+});
+
+
+const STORAGE_KEY="generic-api-tester.saved-requests.v1";
+
+function getSavedRequests(){
+  try{
+    const raw=localStorage.getItem(STORAGE_KEY);
+    if(!raw) return {};
+    const obj=JSON.parse(raw);
+    return obj && typeof obj==="object" ? obj : {};
+  }catch(e){
+    return {};
+  }
+}
+
+function setSavedRequests(obj){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));
+}
+
+function refreshSavedRequests(selectedName=""){
+  const saved=getSavedRequests();
+  const select=$("savedRequests");
+  select.innerHTML="";
+
+  const empty=document.createElement("option");
+  empty.value="";
+  empty.textContent="保存データを選択";
+  select.appendChild(empty);
+
+  Object.keys(saved)
+    .sort((a,b)=>a.localeCompare(b,"ja"))
+    .forEach(name=>{
+      const option=document.createElement("option");
+      option.value=name;
+      option.textContent=name;
+      select.appendChild(option);
+    });
+
+  if(selectedName && saved[selectedName]){
+    select.value=selectedName;
+  }
+}
+
+function setNodeFromValue(node,value){
+  const type=node.dataset.nodeType;
+
+  if(type==="value"){
+    const input=node.querySelector(":scope .node-value");
+    input.value=value==null?"":String(value);
+    return;
+  }
+
+  if(type==="object"){
+    const children=node.querySelector(
+      ":scope > .param-group > .object-children"
+    );
+
+    for(const child of children.children){
+      if(!child.classList.contains("api-node")) continue;
+
+      const name=child.dataset.nodeName;
+
+      if(
+        value &&
+        typeof value==="object" &&
+        !Array.isArray(value) &&
+        Object.prototype.hasOwnProperty.call(value,name)
+      ){
+        setNodeFromValue(child,value[name]);
+      }
+    }
+
+    return;
+  }
+
+  if(type==="array"){
+    const itemsContainer=node.querySelector(
+      ":scope > .param-group > .array-items"
+    );
+
+    itemsContainer.innerHTML="";
+
+    if(!Array.isArray(value)){
+      renumberArray(node);
+      return;
+    }
+
+    value.forEach(itemValue=>{
+      addArrayItem(node);
+
+      const items=node.querySelectorAll(
+        ":scope > .param-group > .array-items > .array-item"
+      );
+
+      const item=items[items.length-1];
+      const child=item.querySelector(":scope > .api-node");
+
+      setNodeFromValue(child,itemValue);
+    });
+
+    renumberArray(node);
+  }
+}
+
+function applyParamsToScreen(params){
+  for(const node of $("paramsArea").children){
+    if(!node.classList.contains("api-node")) continue;
+
+    const name=node.dataset.nodeName;
+
+    if(
+      params &&
+      typeof params==="object" &&
+      Object.prototype.hasOwnProperty.call(params,name)
+    ){
+      setNodeFromValue(node,params[name]);
+    }
+  }
+}
+
+
+function pad2(value){
+  return String(value).padStart(2,"0");
+}
+
+function makeDefaultSaveName(){
+  const now=new Date();
+
+  const base=
+    "request_"+
+    now.getFullYear()+
+    pad2(now.getMonth()+1)+
+    pad2(now.getDate())+
+    "_"+
+    pad2(now.getHours())+
+    pad2(now.getMinutes())+
+    pad2(now.getSeconds());
+
+  const saved=getSavedRequests();
+
+  if(!saved[base]){
+    return base;
+  }
+
+  let index=2;
+
+  while(saved[base+"_"+index]){
+    index++;
+  }
+
+  return base+"_"+index;
+}
+
+
+let confirmResolver=null;
+
+function showConfirmModal(message,title="確認",okLabel="OK"){
+  $("confirmTitle").textContent=title;
+  $("confirmMessage").textContent=message;
+  $("confirmOk").textContent=okLabel;
+
+  $("confirmModal").classList.add("open");
+  $("confirmModal").setAttribute("aria-hidden","false");
+
+  return new Promise(resolve=>{
+    confirmResolver=resolve;
+  });
+}
+
+function closeConfirmModal(result){
+  $("confirmModal").classList.remove("open");
+  $("confirmModal").setAttribute("aria-hidden","true");
+
+  if(confirmResolver){
+    const resolve=confirmResolver;
+    confirmResolver=null;
+    resolve(result);
+  }
+}
+
+$("confirmOk").onclick=()=>closeConfirmModal(true);
+$("confirmCancel").onclick=()=>closeConfirmModal(false);
+
+$("confirmModal").onclick=e=>{
+  if(e.target===$("confirmModal")){
+    closeConfirmModal(false);
+  }
+};
+
+document.addEventListener("keydown",e=>{
+  if(
+    e.key==="Escape" &&
+    $("confirmModal").classList.contains("open")
+  ){
+    closeConfirmModal(false);
+  }
+});
+
+async function saveCurrentRequest(){
+  let name=$("saveName").value.trim();
+  let autoGenerated=false;
+
+  if(!name){
+    name=makeDefaultSaveName();
+    $("saveName").value=name;
+    autoGenerated=true;
+  }
+
+  const existing=getSavedRequests();
+
+  if(
+    !autoGenerated &&
+    Object.prototype.hasOwnProperty.call(existing,name)
+  ){
+    const overwrite=await showConfirmModal(
+      "保存名「"+name+"」は既に存在します。上書きしますか？",
+      "上書き確認",
+      "上書き"
+    );
+
+    if(!overwrite){
+      $("status").textContent=
+        "保存をキャンセルしました";
+      return;
+    }
+  }
+
+  let params;
+
+  try{
+    params=buildParams();
+  }catch(e){
+    $("status").textContent="保存できません: "+e.message;
+    return;
+  }
+
+  const assetKey=$("assetSelect").value;
+  const saved=getSavedRequests();
+
+  saved[name]={
+    assetKey:assetKey,
+    params:params,
+    body:$("body").value,
+    savedAt:new Date().toISOString()
+  };
+
+  setSavedRequests(saved);
+  refreshSavedRequests(name);
+
+  $("status").textContent="保存しました: "+name;
+}
+
+function loadSavedRequest(){
+  const name=$("savedRequests").value;
+
+  if(!name){
+    $("status").textContent="読み込む保存データを選択してください";
+    return;
+  }
+
+  const saved=getSavedRequests();
+  const item=saved[name];
+
+  if(!item){
+    $("status").textContent="保存データが見つかりません";
+    refreshSavedRequests();
+    return;
+  }
+
+  if(!API_ASSETS[item.assetKey]){
+    $("status").textContent=
+      "保存時のAPI定義が現在存在しません: "+item.assetKey;
+    return;
+  }
+
+  $("assetSelect").value=item.assetKey;
+  loadAsset(item.assetKey);
+  applyParamsToScreen(item.params||{});
+  $("body").value=item.body||"";
+  $("saveName").value=name;
+
+  $("status").textContent="読み込みました: "+name;
+}
+
+async function deleteSavedRequest(){
+  const name=$("savedRequests").value;
+
+  if(!name){
+    $("status").textContent="削除する保存データを選択してください";
+    return;
+  }
+
+  const saved=getSavedRequests();
+
+  if(!saved[name]){
+    refreshSavedRequests();
+    return;
+  }
+
+  const confirmed=await showConfirmModal(
+    "保存データ「"+name+"」を削除しますか？",
+    "保存データ削除",
+    "削除"
+  );
+
+  if(!confirmed){
+    $("status").textContent=
+      "削除をキャンセルしました";
+    return;
+  }
+
+  delete saved[name];
+  setSavedRequests(saved);
+  refreshSavedRequests();
+
+  if($("saveName").value===name){
+    $("saveName").value="";
+  }
+
+  $("status").textContent="削除しました: "+name;
+}
+
+
+function buildSavePayload(name=""){
+  const assetKey=$("assetSelect").value;
+
+  return {
+    format:"generic-api-tester-request",
+    version:1,
+    name:name || $("saveName").value.trim() || "request",
+    assetKey:assetKey,
+    params:buildParams(),
+    body:$("body").value,
+    savedAt:new Date().toISOString()
+  };
+}
+
+function sanitizeFileName(name){
+  return String(name || "request")
+    .replace(/[\\/:*?"<>|]/g,"_")
+    .replace(/\s+/g,"_")
+    .replace(/^_+|_+$/g,"") || "request";
+}
+
+function exportCurrentRequest(){
+  let payload;
+
+  try{
+    payload=buildSavePayload();
+  }catch(e){
+    $("status").textContent=
+      "ファイル保存できません: "+e.message;
+    return;
+  }
+
+  const json=JSON.stringify(payload,null,2);
+  const blob=new Blob(
+    [json],
+    {type:"application/json;charset=UTF-8"}
+  );
+
+  const url=URL.createObjectURL(blob);
+  const anchor=document.createElement("a");
+
+  anchor.href=url;
+  anchor.download=
+    sanitizeFileName(payload.name)+".json";
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+
+  setTimeout(
+    ()=>URL.revokeObjectURL(url),
+    0
+  );
+
+  $("status").textContent=
+    "ファイル保存しました: "+anchor.download;
+}
+
+function validateImportedPayload(payload){
+  if(!payload || typeof payload!=="object"){
+    throw new Error("JSONオブジェクトではありません");
+  }
+
+  if(payload.format!=="generic-api-tester-request"){
+    throw new Error("このAPIテスターの保存ファイルではありません");
+  }
+
+  if(payload.version!==1){
+    throw new Error(
+      "未対応の保存ファイルバージョンです: "+
+      payload.version
+    );
+  }
+
+  if(!payload.assetKey){
+    throw new Error("assetKey がありません");
+  }
+
+  return payload;
+}
+
+function applyImportedPayload(payload){
+  validateImportedPayload(payload);
+
+  if(!API_ASSETS[payload.assetKey]){
+    throw new Error(
+      "保存時のAPI定義が現在存在しません: "+
+      payload.assetKey
+    );
+  }
+
+  $("assetSelect").value=
+    payload.assetKey;
+
+  loadAsset(
+    payload.assetKey
+  );
+
+  applyParamsToScreen(
+    payload.params || {}
+  );
+
+  $("body").value=
+    payload.body || "";
+
+  $("saveName").value=
+    payload.name || "";
+
+  $("status").textContent=
+    "ファイルから読み込みました: "+
+    (payload.name || payload.assetKey);
+}
+
+async function importRequestFile(file){
+  if(!file){
+    return;
+  }
+
+  try{
+    const text=await file.text();
+    const payload=JSON.parse(text);
+
+    applyImportedPayload(
+      payload
+    );
+  }catch(e){
+    $("status").textContent=
+      "ファイル読込エラー: "+e.message;
+  }
+}
+
+
+const HISTORY_STORAGE_KEY="generic-api-tester.history.v1";
+const HISTORY_LIMIT=10;
+
+function getHistory(){
+  try{
+    const raw=localStorage.getItem(HISTORY_STORAGE_KEY);
+    if(!raw) return [];
+    const arr=JSON.parse(raw);
+    return Array.isArray(arr) ? arr : [];
+  }catch(e){
+    return [];
+  }
+}
+
+function setHistory(items){
+  localStorage.setItem(
+    HISTORY_STORAGE_KEY,
+    JSON.stringify(items.slice(0,HISTORY_LIMIT))
+  );
+}
+
+function formatHistoryLabel(item,index){
+  const dt=new Date(item.executedAt);
+  const dateText=
+    Number.isNaN(dt.getTime())
+      ? item.executedAt
+      : dt.toLocaleString();
+
+  const asset=
+    API_ASSETS[item.assetKey];
+
+  const label=
+    asset
+      ? (asset.label || item.assetKey)
+      : item.assetKey;
+
+  return `${index+1}. ${dateText} / ${label} / HTTP ${item.status}`;
+}
+
+function refreshHistory(){
+  const select=$("historySelect");
+  select.innerHTML="";
+
+  const empty=document.createElement("option");
+  empty.value="";
+  empty.textContent="実行履歴を選択";
+  select.appendChild(empty);
+
+  const history=getHistory();
+
+  history.forEach((item,index)=>{
+    const option=document.createElement("option");
+    option.value=String(index);
+    option.textContent=formatHistoryLabel(item,index);
+    select.appendChild(option);
+  });
+}
+
+function addHistory(entry){
+  const history=getHistory();
+
+  history.unshift(entry);
+
+  setHistory(
+    history.slice(0,HISTORY_LIMIT)
+  );
+
+  refreshHistory();
+}
+
+function loadHistoryEntry(){
+  const index=Number($("historySelect").value);
+
+  if(!Number.isInteger(index)){
+    $("status").textContent=
+      "読み込む履歴を選択してください";
+    return;
+  }
+
+  const history=getHistory();
+  const item=history[index];
+
+  if(!item){
+    $("status").textContent=
+      "履歴が見つかりません";
+    refreshHistory();
+    return;
+  }
+
+  if(!API_ASSETS[item.assetKey]){
+    $("status").textContent=
+      "履歴のAPI定義が現在存在しません: "+
+      item.assetKey;
+    return;
+  }
+
+  $("assetSelect").value=
+    item.assetKey;
+
+  loadAsset(
+    item.assetKey
+  );
+
+  applyParamsToScreen(
+    item.params || {}
+  );
+
+  $("body").value=
+    item.body || "";
+
+  $("response").textContent=
+    item.responseText || "";
+
+  $("status").textContent=
+    "履歴を読み込みました: HTTP "+
+    item.status+
+    " / "+
+    item.executedAt;
+}
+
+
+async function deleteSelectedHistoryEntry(){
+  const value=$("historySelect").value;
+
+  if(value===""){
+    $("status").textContent=
+      "削除する履歴を選択してください";
+    return;
+  }
+
+  const index=Number(value);
+
+  if(!Number.isInteger(index)){
+    $("status").textContent=
+      "履歴の選択が不正です";
+    return;
+  }
+
+  const history=getHistory();
+
+  if(index<0 || index>=history.length){
+    $("status").textContent=
+      "履歴が見つかりません";
+    refreshHistory();
+    return;
+  }
+
+  const removed=history.splice(index,1)[0];
+
+  setHistory(history);
+  refreshHistory();
+
+  $("status").textContent=
+    "履歴を1件削除しました: "+
+    (
+      removed && removed.executedAt
+        ? removed.executedAt
+        : ""
+    );
+}
+
+async function clearHistoryEntries(){
+  const history=getHistory();
+
+  if(history.length===0){
+    $("status").textContent=
+      "削除する実行履歴がありません";
+    return;
+  }
+
+  const confirmed=await showConfirmModal(
+    "保存されている実行履歴をすべて削除しますか？",
+    "履歴全削除",
+    "全削除"
+  );
+
+  if(!confirmed){
+    $("status").textContent=
+      "履歴全削除をキャンセルしました";
+    return;
+  }
+
+  localStorage.removeItem(
+    HISTORY_STORAGE_KEY
+  );
+
+  refreshHistory();
+
+  $("status").textContent=
+    "実行履歴をすべて削除しました";
+}
+
+$("assetSelect").onchange=()=>loadAsset($("assetSelect").value);
+$("reloadAssets").onclick=async()=>{try{await loadAssets();}catch(e){$("status").textContent="定義読込エラー: "+e.message;}};
+$("preview").onclick=showPreview;
+
+$("copyBody").onclick=async()=>{
+  try{
+    showPreview();
+    await copyToClipboard(
+      $("body").value,
+      "送信内容をコピー"
+    );
+  }catch(e){
+    $("status").textContent="コピー失敗: "+e.message;
+  }
+};
+
+$("copyResponse").onclick=async()=>{
+  const text=$("response").textContent;
+  if(!text || text==="(未実行)"){
+    $("status").textContent="コピーするレスポンスがありません";
+    return;
+  }
+  await copyToClipboard(
+    text,
+    "レスポンスをコピー"
+  );
+};
+
+
+$("saveRequest").onclick=saveCurrentRequest;
+$("loadRequest").onclick=loadSavedRequest;
+$("deleteRequest").onclick=deleteSavedRequest;
+
+$("savedRequests").onchange=()=>{
+  const name=$("savedRequests").value;
+  if(name){
+    $("saveName").value=name;
+  }
+};
+
+
+$("exportRequest").onclick=exportCurrentRequest;
+
+$("importRequest").onclick=()=>{
+  $("importFile").value="";
+  $("importFile").click();
+};
+
+$("importFile").onchange=async()=>{
+  const file=$("importFile").files[0];
+  await importRequestFile(file);
+};
+
+
+$("loadHistory").onclick=loadHistoryEntry;
+$("deleteHistory").onclick=deleteSelectedHistoryEntry;
+$("clearHistory").onclick=clearHistoryEntries;
+
+$("execute").onclick=execute;
+$("clear").onclick=()=>{$("status").textContent="待機中";$("response").textContent="(未実行)";};
+
+refreshSavedRequests();
+refreshHistory();
+
+(async()=>{
+  try{
+    await loadAssets();
+
+    // API定義読込後に再生成し、履歴内のassetKeyを表示名へ解決する。
+    refreshHistory();
+
+  }catch(e){
+    $("status").textContent="定義読込エラー: "+e.message;
+  }
+})();
+</script>
+
+</body>
+</html>

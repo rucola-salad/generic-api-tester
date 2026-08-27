@@ -1,0 +1,200 @@
+{
+  "employee-list": {
+    "label": "社員一覧取得サンプル",
+    "method": "GET",
+    "paramLocation": "query",
+    "bodyType": "none",
+    "serialization": "native",
+    "url": "https://jsonplaceholder.typicode.com/users",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": []
+  },
+  "business-record-search": {
+    "label": "業務データ検索サンプル",
+    "method": "GET",
+    "paramLocation": "query",
+    "bodyType": "none",
+    "serialization": "native",
+    "url": "https://jsonplaceholder.typicode.com/posts",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "userId",
+        "label": "担当者ID",
+        "type": "value",
+        "value": "",
+        "placeholder": "例: 1"
+      }
+    ]
+  },
+  "application-create": {
+    "label": "申請登録サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "serialization": "native",
+    "url": "https://jsonplaceholder.typicode.com/posts",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "title",
+        "label": "件名",
+        "type": "value",
+        "value": "",
+        "placeholder": "例: 出張申請"
+      },
+      {
+        "name": "body",
+        "label": "申請内容",
+        "type": "value",
+        "value": "",
+        "placeholder": "例: 東京出張の申請です"
+      },
+      {
+        "name": "userId",
+        "label": "申請者ID",
+        "type": "value",
+        "value": 1
+      }
+    ]
+  },
+  "nested-json-echo": {
+    "label": "ネストJSON送信サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "serialization": "native",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "Application",
+        "label": "申請情報",
+        "type": "object",
+        "children": [
+          {
+            "name": "Applicant",
+            "label": "申請者",
+            "type": "object",
+            "children": [
+              {
+                "name": "EmployeeId",
+                "label": "社員番号",
+                "type": "value",
+                "value": "",
+                "placeholder": "例: E00125"
+              },
+              {
+                "name": "Department",
+                "label": "部署",
+                "type": "value",
+                "value": "",
+                "placeholder": "例: SALES"
+              }
+            ]
+          },
+          {
+            "name": "Approvers",
+            "label": "承認者",
+            "type": "array",
+            "item": {
+              "type": "object",
+              "children": [
+                {
+                  "name": "EmployeeId",
+                  "label": "承認者社員番号",
+                  "type": "value",
+                  "value": ""
+                },
+                {
+                  "name": "Sequence",
+                  "label": "承認順",
+                  "type": "value",
+                  "value": 1
+                }
+              ]
+            },
+            "initialItems": 1
+          }
+        ]
+      }
+    ]
+  },
+  "form-post-echo": {
+    "label": "フォーム送信サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "form",
+    "serialization": "native",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "employeeId",
+        "label": "社員番号",
+        "type": "value",
+        "value": "",
+        "placeholder": "例: E00125"
+      },
+      {
+        "name": "status",
+        "label": "状態",
+        "type": "value",
+        "value": "ACTIVE"
+      }
+    ]
+  },
+  "special-values-sample": {
+    "label": "特殊値生成サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "serialization": "native",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "RequestId",
+        "label": "リクエストID(UUID)",
+        "type": "value",
+        "special": "uuid",
+        "format": "default"
+      },
+      {
+        "name": "TraceId",
+        "label": "トレースID(UUID compact)",
+        "type": "value",
+        "special": "uuid",
+        "format": "compact"
+      },
+      {
+        "name": "RequestDateTime",
+        "label": "リクエスト日時",
+        "type": "value",
+        "special": "datetime",
+        "format": "yyyy-MM-dd HH:mm:ss.SSS",
+        "timezone": "local"
+      },
+      {
+        "name": "UtcDateTime",
+        "label": "UTC日時",
+        "type": "value",
+        "special": "datetime",
+        "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
+        "timezone": "utc"
+      }
+    ]
+  }
+}
