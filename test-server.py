@@ -15,20 +15,77 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlsplit
 
-HOST = "127.0.0.1"
-PORT = 8000
-
 SCRIPT_DIR = Path(__file__).resolve().parent
-WEB_ROOT = SCRIPT_DIR / "html"
-DEFAULT_DOCUMENT = "api-tester.html"
+CONFIG_PATH = SCRIPT_DIR / "server-config.json"
 
-PROXY_PATH = "/proxy"
-PROXY_TIMEOUT = 60
+DEFAULT_CONFIG = {
+    "host": "127.0.0.1",
+    "port": 8000,
+    "web_root": "html",
+    "default_document": "api-tester.html",
+    "proxy_path": "/proxy",
+    "proxy_timeout": 60,
+    "allowed_schemes": [
+        "https"
+    ],
+    "allowed_hosts": [
+        "jsonplaceholder.typicode.com",
+        "httpbin.org"
+    ],
+    "open_browser": True
+}
+
+
+def load_config() -> dict:
+    config = dict(DEFAULT_CONFIG)
+
+    if CONFIG_PATH.is_file():
+        try:
+            loaded = json.loads(
+                CONFIG_PATH.read_text(encoding="utf-8")
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                f"server-config.json の読込に失敗しました: {exc}"
+            ) from exc
+
+        if not isinstance(loaded, dict):
+            raise RuntimeError(
+                "server-config.json のルートはJSONオブジェクトにしてください"
+            )
+
+        config.update(loaded)
+
+    return config
+
+
+CONFIG = load_config()
+
+HOST = str(CONFIG["host"])
+PORT = int(CONFIG["port"])
+
+web_root_setting = str(CONFIG["web_root"])
+WEB_ROOT = (
+    Path(web_root_setting)
+    if Path(web_root_setting).is_absolute()
+    else SCRIPT_DIR / web_root_setting
+)
+
+DEFAULT_DOCUMENT = str(CONFIG["default_document"])
+PROXY_PATH = str(CONFIG["proxy_path"])
+PROXY_TIMEOUT = int(CONFIG["proxy_timeout"])
+
+ALLOWED_SCHEMES = {
+    str(value).lower()
+    for value in CONFIG.get("allowed_schemes", ["https"])
+}
 
 ALLOWED_HOSTS = {
-    "jsonplaceholder.typicode.com",
-    "httpbin.org",
+    str(value).lower()
+    for value in CONFIG.get("allowed_hosts", [])
 }
+
+OPEN_BROWSER = bool(CONFIG.get("open_browser", True))
 
 
 def log(message: str) -> None:
@@ -122,6 +179,8 @@ class Handler(SimpleHTTPRequestHandler):
     def _proxy_request(self):
         target_url = self.headers.get("X-Proxy-Target", "").strip()
         target_method = self.headers.get("X-Proxy-Method", "GET").strip().upper()
+        proxy_body_type = self.headers.get("X-Proxy-Body-Type", "").strip().lower()
+        incoming_content_type = self.headers.get("Content-Type", "")
 
         if not target_url:
             self._send_json(400, {
@@ -132,10 +191,15 @@ class Handler(SimpleHTTPRequestHandler):
 
         parsed = urlsplit(target_url)
 
-        if parsed.scheme != "https":
+        scheme = (parsed.scheme or "").lower()
+
+        if scheme not in ALLOWED_SCHEMES:
             self._send_json(403, {
                 "error": "proxy_target_not_allowed",
-                "message": "HTTPS のURLだけ指定できます",
+                "message": (
+                    "許可されていないURLスキームです: "
+                    f"{scheme or '(なし)'}"
+                ),
             })
             return
 
@@ -173,6 +237,12 @@ class Handler(SimpleHTTPRequestHandler):
             body = self.rfile.read(int(content_length))
 
         headers = {"Connection": "close"}
+
+        if proxy_body_type == "multipart" and incoming_content_type:
+            upstream_headers["Content-Type"] = incoming_content_type
+
+        if proxy_body_type == "binary" and incoming_content_type:
+            upstream_headers.setdefault("Content-Type", incoming_content_type)
 
         for key, value in upstream_headers.items():
             if value is not None:
@@ -309,10 +379,17 @@ def main() -> int:
     )
     server.daemon_threads = True
 
-    # サーバー生成後に既定ブラウザを自動起動
-    webbrowser.open(
-        f"http://localhost:{PORT}/"
-    )
+    # 設定に応じて既定ブラウザを自動起動
+    if OPEN_BROWSER:
+        browser_host = (
+            "localhost"
+            if HOST in ("127.0.0.1", "0.0.0.0", "::")
+            else HOST
+        )
+
+        webbrowser.open(
+            f"http://{browser_host}:{PORT}/"
+        )
 
     log("")
     log("========================================")
@@ -321,7 +398,10 @@ def main() -> int:
     log(f"Web root : {WEB_ROOT}")
     log(f"URL      : http://localhost:{PORT}/")
     log(f"Proxy    : {PROXY_PATH}")
+    log(f"Config   : {CONFIG_PATH}")
+    log(f"Schemes  : {', '.join(sorted(ALLOWED_SCHEMES))}")
     log(f"Allowed  : {', '.join(sorted(ALLOWED_HOSTS))}")
+    log(f"Browser  : {'open' if OPEN_BROWSER else 'disabled'}")
     log(f"Timeout  : {PROXY_TIMEOUT} sec")
     log("========================================")
     log("Press Ctrl+C to stop.")

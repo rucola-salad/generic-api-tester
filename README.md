@@ -170,6 +170,7 @@ generic-api-tester/
 ├─ README.md
 ├─ start-server.bat
 ├─ test-server.py
+├─ server-config.json
 └─ html/
    ├─ api-tester.html
    └─ assets/
@@ -572,3 +573,473 @@ Generic API Tester is licensed under the **Apache License 2.0**.
 Copyright 2026 rucola-salad
 
 See `LICENSE` for the full Apache License 2.0 text and `NOTICE` for attribution information.
+
+
+## READMEモーダルのMarkdownテーブル
+
+画面上部の **README** ボタンで表示するモーダルは、次の形式のMarkdownテーブルをHTMLの表として表示します。
+
+```markdown
+| 項目 | 内容 |
+| --- | --- |
+| OS | Windows 10 / 11 |
+| Python | Python 3 |
+```
+
+
+## 画面レイアウト
+
+通常表示では、入力と結果確認を優先して次の構成にしています。
+
+```text
+┌─────────────────────────────────────┐
+│ パラメータ                    250px │
+├─────────────────────────────────────┤
+│ ▶ リクエスト    ▶ HTTPヘッダー      │
+├──────────────────┬──────────────────┤
+│ 送信内容          │ レスポンス        │
+│                  │                  │
+└──────────────────┴──────────────────┘
+```
+
+**リクエスト** と **HTTPヘッダー** は初期状態では折りたたまれています。必要な場合だけ展開できます。
+
+折りたたんだ状態では余白を残さず、送信内容とレスポンスを左右に並べて広く表示します。画面幅が狭い場合は自動的に1列表示へ切り替わります。
+
+
+## パラメータ欄の高さ
+
+パラメータ欄の高さは、API定義に応じて自動的に切り替わります。
+
+- パラメータあり: 内容に必要な高さだけ使用し、最大 `250px` で内部スクロール
+- パラメータなし: 最小高さで `（なし）` のみ表示
+
+パラメータがないAPIでは不要な余白を使わず、送信内容・レスポンスなどの表示領域を優先します。
+
+
+パラメータが少ない場合は250pxまで領域を確保せず、入力項目の高さに合わせて自動的に縮みます。また、パラメータ間の余白もコンパクトにしています。
+
+
+## `special` の生成ルール
+
+`special` を指定したパラメータは通常入力ではなく、自動生成値として扱います。
+
+- `special: "uuid"`: UUIDを自動生成
+- `special: "datetime"`: 日時を自動生成
+
+画面上の入力欄は **readonly** です。ユーザーが直接編集する代わりに **再生成** ボタンを使用します。
+
+### 未設定の場合
+
+値が空の場合は、**送信内容を生成** または **API実行** のタイミングで自動生成します。
+
+### 読み込んだ場合
+
+名前付き保存、実行履歴、JSONファイルから `special` パラメータの値を読み込んだ場合は、その値をそのまま使用します。
+
+API実行時に自動で上書きしません。
+
+### 再生成
+
+新しいUUIDや日時が必要な場合は、そのパラメータの **再生成** ボタンを押します。
+
+```text
+初期状態
+UUID: [ UUIDを自動生成 ] [再生成]
+
+      ↓ 送信内容を生成
+
+UUID: [550e8400-e29b-41d4-a716-446655440000] [再生成]
+
+      ↓ 保存・履歴読込
+
+UUID: [550e8400-e29b-41d4-a716-446655440000] [再生成]
+
+      ↓ API実行
+
+読み込んだUUIDをそのまま送信
+```
+
+これにより、保存したテストケースや過去の実行履歴を再現するときに、当時使用したUUID・日時を保持できます。
+
+
+## UUID自動生成の補足
+
+`special: "uuid"` の値は、送信内容生成・API実行・パラメータ組み立てのいずれの場合でも、値が空なら自動生成されます。
+
+画面ノードには `special` / `format` / `timezone` の定義情報を保持し、保存・履歴・ファイルから値が読み込まれている場合はその値を維持します。
+
+
+## UUID生成処理の実装
+
+`special` の情報は、生成対象となる入力欄自身の `data-special` / `data-special-format` / `data-special-timezone` に保持します。
+
+これにより、親ノードの構造に依存せず、`送信内容を生成`・`API実行`・`再生成` のいずれからでも同じ入力欄へ確実に特殊値を設定します。
+
+
+## コンパクトレイアウト
+
+画面上部は、パラメータ入力と送信内容確認を横並びにしています。
+
+```text
+┌──────────────────┬────────────────────────┐
+│ パラメータ        │ 送信内容                │
+│ コンパクト表示    │                        │
+├──────────────────┴────────────────────────┤
+│ ▶ リクエスト      ▶ HTTPヘッダー            │
+├───────────────────────────────────────────┤
+│ レスポンス                                  │
+└───────────────────────────────────────────┘
+```
+
+パラメータ欄は余白を詰め、最大高さも抑えています。`special` の再生成ボタンは改行しないよう固定幅で表示します。
+
+画面幅が狭い場合は自動的に1列表示へ切り替わります。
+
+
+## 2カラム画面レイアウト
+
+デスクトップでは、画面を「入力・設定」と「通信内容」に分けた2カラム構成です。
+
+```text
+┌──────────────────┬──────────────────────────┐
+│ パラメータ        │ 送信内容                  │
+├──────────────────┤                          │
+│ ▶ リクエスト      ├──────────────────────────┤
+├──────────────────┤ レスポンス                │
+│ ▶ HTTPヘッダー    │                          │
+└──────────────────┴──────────────────────────┘
+```
+
+- 左列（約40%）: パラメータ、リクエスト、HTTPヘッダー
+- 右列（約60%）: 送信内容、レスポンス
+- リクエストとHTTPヘッダーは初期状態で折りたたみ
+- 画面幅が狭い場合は1カラムへ自動切替
+
+
+### 初期表示
+
+- リクエスト欄は折りたたみ可能ですが、初期状態では展開して表示します。
+- HTTPヘッダー欄は初期状態では折りたたみます。
+- 送信内容欄は縦方向をコンパクトにし、レスポンス表示領域を広く確保します。
+
+
+## 型・必須・null・デフォルト値
+
+`type: "value"` では `valueType`、`required`、`nullable`、`default` を指定できます。
+
+```json
+{
+  "name": "EmployeeCode",
+  "label": "社員コード",
+  "type": "value",
+  "valueType": "string",
+  "required": true,
+  "nullable": false,
+  "default": "E00125"
+}
+```
+
+| 属性 | 内容 |
+| --- | --- |
+| `type` | 構造。`value` / `object` / `array` |
+| `valueType` | 値型。`string` / `number` / `boolean` |
+| `required` | 必須かどうか |
+| `nullable` | 必須かつ未指定の場合に `null` を許可するか |
+| `default` | 初期値 |
+| `special` | UUID・日時などの自動生成 |
+
+`valueType` がない既存定義は、後方互換のため従来の自動型判定を使用します。
+
+空欄時は、任意項目ならパラメータを省略、必須かつ `nullable: false` なら入力エラー、必須かつ `nullable: true` なら `null` を送信します。
+
+### Boolean
+
+Booleanは3状態チェックボックスです。
+
+```text
+[-] 未指定 → [✓] true → [ ] false → [-] 未指定
+```
+
+`default: true` / `default: false` で初期値を指定できます。`default` がなければ未指定で開始します。任意項目の未指定はパラメータを省略し、必須項目の未指定は `nullable` の指定に従います。
+
+### Booleanを同行表示
+
+親オブジェクトへ `layout: "inline"` を指定すると、子項目を同行に並べられます。
+
+```json
+{
+  "name": "Conditions",
+  "label": "状態条件",
+  "type": "object",
+  "layout": "inline",
+  "children": [
+    {
+      "name": "Active",
+      "label": "有効",
+      "type": "value",
+      "valueType": "boolean",
+      "required": false,
+      "default": true
+    },
+    {
+      "name": "Deleted",
+      "label": "削除済み",
+      "type": "value",
+      "valueType": "boolean",
+      "required": false
+    }
+  ]
+}
+```
+
+横幅が不足した場合は自動的に折り返します。保存・履歴・ファイルから読み込んだ値は `default` より優先して復元します。
+
+
+## Booleanチェックボックス表示
+
+`valueType: "boolean"` の項目はチェックボックスとして表示します。
+
+```json
+{
+  "name": "Active",
+  "label": "有効",
+  "type": "value",
+  "valueType": "boolean",
+  "required": false
+}
+```
+
+チェックボックスは `未指定 → true → false → 未指定` の3状態を循環します。ブラウザの共通 `input` スタイルに埋もれないよう、Boolean用の表示スタイルを個別に適用しています。
+
+
+## Boolean 3状態の切替
+
+Booleanの状態はブラウザ標準のcheckbox切替に依存せず、内部状態として明示的に管理します。
+
+```text
+未指定 → true → false → 未指定
+```
+
+クリックまたはキーボードのSpace / Enterで次の状態へ遷移します。これにより、`indeterminate` を含む3状態をブラウザ差異の影響を受けにくい形で扱います。
+
+
+## ファイル・Quoted-Printable・XML
+
+### ファイル
+
+```json
+{
+  "name": "file",
+  "label": "添付ファイル",
+  "type": "value",
+  "valueType": "file",
+  "accept": ".pdf,.txt,image/*",
+  "multiple": false
+}
+```
+
+`accept: "image/*"` で画像、`accept: "video/*"` で動画を選択できます。
+
+### bodyType
+
+| bodyType | 用途 |
+| --- | --- |
+| `none` | Bodyなし |
+| `json` | JSON |
+| `form` | application/x-www-form-urlencoded |
+| `multipart` | multipart/form-data |
+| `binary` | Body全体をファイル/バイナリとして送信 |
+| `xml` | XML |
+| `raw` | 生データ |
+
+### encoding
+
+| encoding | 内容 |
+| --- | --- |
+| `none` | 変換なし |
+| `base64` | Base64 |
+| `quoted-printable` | Quoted-Printable |
+
+文字列にも `encoding` を指定できます。
+
+```json
+{
+  "name": "message",
+  "type": "value",
+  "valueType": "string",
+  "encoding": "quoted-printable"
+}
+```
+
+ファイルをJSON/XMLへ埋め込む場合は `base64` または `quoted-printable` を指定します。
+
+### XML
+
+```json
+{
+  "bodyType": "xml",
+  "xml": {
+    "root": "request",
+    "declaration": true
+  }
+}
+```
+
+`type: "object"` はネストしたXML要素、`type: "array"` は同名要素の繰り返しとして生成します。
+
+生成例:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<request>
+  <Employee>
+    <EmployeeId>E00125</EmployeeId>
+    <Active>true</Active>
+  </Employee>
+</request>
+```
+
+### 認証
+
+Bearer Token:
+
+```json
+{
+  "auth": {
+    "type": "bearer"
+  }
+}
+```
+
+API Key:
+
+```json
+{
+  "auth": {
+    "type": "apiKey",
+    "in": "header",
+    "name": "X-API-Key"
+  }
+}
+```
+
+認証値は `api-assets.json` へ直接書かず、画面から入力します。
+
+
+## Booleanクリック操作
+
+Booleanの3状態チェックボックスは、チェックボックス本体・ラベル部分のどちらをクリックしても同じ動作をします。
+
+```text
+未指定 → true → false → 未指定
+```
+
+チェックボックス本体の標準トグルと独自3状態処理が二重に動かないよう、イベント処理を分離しています。
+
+
+## Booleanチェック状態の表示
+
+Booleanチェックボックス本体は表示専用とし、クリック操作はBooleanコントロール全体で処理します。
+
+これにより、ブラウザ標準のcheckbox切替と3状態ロジックが競合せず、次の状態が見た目にも正しく反映されます。
+
+```text
+[-] 未指定 → [✓] true → [ ] false → [-] 未指定
+```
+
+
+## Boolean同行表示の折り返し
+
+`layout: "inline"` のBoolean項目は、各項目を内容幅で横並びにし、横幅が不足した場合だけ次の行へ折り返します。
+
+```text
+[✓] 有効 true    [-] 削除済み 未指定    [ ] ロック false
+
+↓ 幅が不足した場合
+
+[✓] 有効 true    [-] 削除済み 未指定
+[ ] ロック false
+```
+
+各Boolean項目が列幅いっぱいに広がらないよう、`flex: 0 0 auto` と `width: auto` を使用しています。
+
+
+## トップレベルBooleanの同行表示
+
+APIのJSON構造を変えずに、トップレベルへ連続して定義されたBooleanパラメータも自動的に横並び表示します。
+
+例えば次の定義はJSON上ではすべてトップレベルです。
+
+```json
+{
+  "name": "PreferNormalImage",
+  "type": "value",
+  "valueType": "boolean"
+}
+```
+
+```text
+[✓] 通常版画像を優先 true
+[✓] 最新セットを優先 true
+[✓] 別名検索を許可 true
+```
+
+画面では可能な限り同行に並べ、横幅が不足した場合だけ次行へ折り返します。送信JSONの階層は変更しません。
+
+
+## サーバー設定
+
+`test-server.py` の実行設定は、プロジェクト直下の `server-config.json` で変更できます。通常はPythonコードを直接修正する必要はありません。
+
+```json
+{
+  "host": "127.0.0.1",
+  "port": 8000,
+  "web_root": "html",
+  "default_document": "api-tester.html",
+  "proxy_path": "/proxy",
+  "proxy_timeout": 60,
+  "allowed_schemes": [
+    "https"
+  ],
+  "allowed_hosts": [
+    "jsonplaceholder.typicode.com",
+    "httpbin.org"
+  ],
+  "open_browser": true
+}
+```
+
+| 設定 | 内容 |
+| --- | --- |
+| `host` | ローカルHTTPサーバーの待受アドレス |
+| `port` | ローカルHTTPサーバーのポート番号 |
+| `web_root` | HTML等を配信するディレクトリ。相対パスはプロジェクト直下基準 |
+| `default_document` | `/` で表示するHTML |
+| `proxy_path` | APIプロキシのローカルパス |
+| `proxy_timeout` | 対象APIへの通信タイムアウト秒数 |
+| `allowed_schemes` | プロキシ接続を許可するURLスキーム |
+| `allowed_hosts` | プロキシ接続を許可するAPIホスト |
+| `open_browser` | 起動時に既定ブラウザを自動で開くか |
+
+新しいAPIへアクセスする場合は、対象ホストを `allowed_hosts` に追加します。
+
+```json
+"allowed_hosts": [
+  "jsonplaceholder.typicode.com",
+  "httpbin.org",
+  "api.example.com"
+]
+```
+
+セキュリティ上、`allowed_hosts` を無制限にする設定は用意していません。利用するAPIホストを明示的に登録してください。
+
+通常は `allowed_schemes` を `["https"]` のまま使用してください。ローカル開発用HTTP APIへ接続する必要がある場合だけ、明示的に `"http"` を追加します。
+
+```json
+"allowed_schemes": [
+  "https",
+  "http"
+]
+```

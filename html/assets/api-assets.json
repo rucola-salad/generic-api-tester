@@ -196,5 +196,188 @@
         "timezone": "utc"
       }
     ]
+  },
+  "typed-business-search": {
+    "label": "型指定・検索条件サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "serialization": "native",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "EmployeeCode",
+        "label": "社員コード",
+        "type": "value",
+        "valueType": "string",
+        "required": true,
+        "nullable": false,
+        "default": "E00125"
+      },
+      {
+        "name": "Limit",
+        "label": "取得件数",
+        "type": "value",
+        "valueType": "number",
+        "required": false,
+        "default": 100
+      },
+      {
+        "name": "Conditions",
+        "label": "状態条件",
+        "type": "object",
+        "layout": "inline",
+        "children": [
+          {
+            "name": "Active",
+            "label": "有効",
+            "type": "value",
+            "valueType": "boolean",
+            "required": false,
+            "default": true
+          },
+          {
+            "name": "Deleted",
+            "label": "削除済み",
+            "type": "value",
+            "valueType": "boolean",
+            "required": false
+          },
+          {
+            "name": "Locked",
+            "label": "ロック",
+            "type": "value",
+            "valueType": "boolean",
+            "required": false,
+            "default": false
+          }
+        ]
+      }
+    ]
+  },
+  "multipart-file-sample": {
+    "label": "ファイルアップロードサンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "multipart",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "title",
+        "label": "タイトル",
+        "type": "value",
+        "valueType": "string"
+      },
+      {
+        "name": "file",
+        "label": "添付ファイル",
+        "type": "value",
+        "valueType": "file",
+        "required": true,
+        "accept": ".pdf,.txt,image/*"
+      }
+    ]
+  },
+  "qp-sample": {
+    "label": "Quoted-Printableサンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "url": "https://httpbin.org/post",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "message",
+        "label": "メッセージ",
+        "type": "value",
+        "valueType": "string",
+        "encoding": "quoted-printable",
+        "default": "こんにちは API"
+      }
+    ]
+  },
+  "xml-sample": {
+    "label": "XML送信サンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "xml",
+    "url": "https://httpbin.org/post",
+    "xml": {
+      "root": "request",
+      "declaration": true
+    },
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "Employee",
+        "label": "社員",
+        "type": "object",
+        "children": [
+          {
+            "name": "EmployeeId",
+            "label": "社員番号",
+            "type": "value",
+            "valueType": "string",
+            "required": true,
+            "default": "E00125"
+          },
+          {
+            "name": "Active",
+            "label": "有効",
+            "type": "value",
+            "valueType": "boolean",
+            "default": true
+          }
+        ]
+      }
+    ]
+  },
+  "xml-file-base64": {
+    "label": "XML + Base64ファイルサンプル",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "xml",
+    "url": "https://httpbin.org/post",
+    "xml": {
+      "root": "uploadRequest",
+      "declaration": true
+    },
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": [
+      {
+        "name": "FileData",
+        "label": "ファイル",
+        "type": "value",
+        "valueType": "file",
+        "encoding": "base64",
+        "required": true
+      }
+    ]
+  },
+  "bearer-sample": {
+    "label": "Bearer認証サンプル",
+    "method": "GET",
+    "paramLocation": "query",
+    "bodyType": "none",
+    "url": "https://httpbin.org/bearer",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "auth": {
+      "type": "bearer"
+    },
+    "params": []
   }
 }

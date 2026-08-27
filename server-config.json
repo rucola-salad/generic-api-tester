@@ -1,0 +1,16 @@
+{
+  "host": "127.0.0.1",
+  "port": 8000,
+  "web_root": "html",
+  "default_document": "api-tester.html",
+  "proxy_path": "/proxy",
+  "proxy_timeout": 60,
+  "allowed_schemes": [
+    "https"
+  ],
+  "allowed_hosts": [
+    "jsonplaceholder.typicode.com",
+    "httpbin.org"
+  ],
+  "open_browser": true
+}

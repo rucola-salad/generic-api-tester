@@ -287,18 +287,380 @@ summary{
   background:#f7f8fa;
 }
 
+
+.full-width{
+  grid-column:1 / -1;
+}
+
+.detail-bar{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+}
+
+.compact-detail{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:9px;
+  min-width:0;
+}
+
+.compact-detail > summary{
+  padding:11px 14px;
+  list-style-position:inside;
+}
+
+.compact-detail[open] > summary{
+  border-bottom:1px solid var(--line);
+}
+
+.compact-detail-content{
+  padding:14px;
+}
+
+.compact-detail .header-table{
+  margin-top:0;
+}
+
+.output-tile{
+  min-height:0;
+}
+
+.output-tile textarea,
+.output-tile pre{
+  min-height:260px;
+  height:calc(100vh - 570px);
+  max-height:520px;
+}
+
+.output-tile textarea{
+  resize:vertical;
+}
+
+
+.main-layout{
+  display:grid;
+  grid-template-columns:minmax(340px,0.8fr) minmax(520px,1.2fr);
+  gap:14px;
+  align-items:start;
+}
+
+.params-tile{
+  min-width:0;
+}
+
+.params-tile #paramsArea{
+  max-height:220px;
+}
+
+.params-tile .param-leaf{
+  grid-template-columns:150px minmax(0,1fr);
+  gap:6px;
+  margin-bottom:5px;
+}
+
+.params-tile .param-group{
+  padding:8px;
+  margin-bottom:6px;
+}
+
+.params-tile .param-group-title{
+  margin-bottom:5px;
+}
+
+.params-tile input,
+.params-tile textarea{
+  padding:5px 7px;
+}
+
+.special-value-control{
+  display:flex;
+  gap:6px;
+  align-items:center;
+  min-width:0;
+}
+
+.special-value-control .node-value{
+  flex:1 1 auto;
+  min-width:0;
+}
+
+.special-value-control .special-regenerate{
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.send-tile textarea{
+  min-height:220px;
+  height:220px;
+}
+
+.details-row{
+  grid-column:1 / -1;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+}
+
+.response-tile{
+  grid-column:1 / -1;
+}
+
+.response-tile pre{
+  min-height:340px;
+  max-height:620px;
+}
+
+@media(max-width:1000px){
+  .main-layout{
+    grid-template-columns:1fr;
+  }
+
+  .details-row{
+    grid-template-columns:1fr;
+  }
+
+  .response-tile{
+    grid-column:auto;
+  }
+}
+
+@media(max-width:900px){
+  .detail-bar{
+    grid-template-columns:1fr;
+  }
+
+  .output-tile textarea,
+  .output-tile pre{
+    height:auto;
+    min-height:220px;
+  }
+}
+
+
+#paramsArea .api-node{
+  margin-bottom:6px;
+}
+
+#paramsArea .node-row{
+  gap:6px;
+}
+
+#paramsArea .node-children{
+  margin-top:6px;
+}
+
 #paramsArea{
-  height:250px;
-  min-height:250px;
-  max-height:250px;
   overflow:auto;
   padding-right:4px;
+}
+
+#paramsArea.has-params{
+  height:auto;
+  min-height:0;
+  max-height:250px;
+  overflow:auto;
+}
+
+#paramsArea.no-params{
+  height:auto;
+  min-height:0;
+  max-height:none;
+  overflow:visible;
 }
 
 @media(max-width:900px){
   body{padding:10px}
   .grid{grid-template-columns:1fr}
 }
+
+.two-column-layout{
+  display:grid;
+  grid-template-columns:minmax(380px,40%) minmax(0,60%);
+  gap:14px;
+  align-items:start;
+}
+
+.left-column,
+.right-column{
+  display:flex;
+  flex-direction:column;
+  gap:14px;
+  min-width:0;
+}
+
+.left-column .params-tile #paramsArea{
+  max-height:250px;
+}
+
+.left-column .compact-detail{
+  width:100%;
+}
+
+.right-column .send-tile textarea{
+  min-height:140px;
+  height:150px;
+}
+
+.right-column .response-tile pre{
+  min-height:420px;
+  max-height:650px;
+}
+
+@media(max-width:1000px){
+  .two-column-layout{
+    grid-template-columns:1fr;
+  }
+}
+
+
+.required-mark{margin-left:4px;font-weight:700}
+.boolean-control{display:inline-flex;align-items:center;gap:6px;min-height:30px;cursor:pointer;user-select:none}
+.boolean-control input[type="checkbox"]{width:auto;margin:0}
+.boolean-state{min-width:42px;font-size:12px;opacity:.75}
+.inline-layout > .object-children{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center}
+.inline-layout > .object-children > .api-node{flex:0 0 auto;min-width:0}
+.inline-layout > .object-children > .api-node > .param-leaf{display:flex;grid-template-columns:none;align-items:center;gap:6px;margin:0}
+.inline-layout > .object-children > .api-node > .param-leaf > label{display:none}
+
+.boolean-row{
+  align-items:center;
+}
+
+.boolean-control{
+  display:inline-flex !important;
+  align-items:center;
+  gap:6px;
+  min-height:28px;
+  cursor:pointer;
+  user-select:none;
+  padding:2px 4px;
+  border-radius:4px;
+}
+
+.boolean-control input[type="checkbox"]{
+  display:inline-block !important;
+  appearance:auto;
+  -webkit-appearance:checkbox;
+  width:16px !important;
+  height:16px !important;
+  min-width:16px;
+  margin:0;
+  padding:0;
+  flex:0 0 auto;
+  pointer-events:none;
+}
+
+.boolean-caption{
+  white-space:nowrap;
+}
+
+
+.file-control{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+.file-control input[type="file"]{
+  min-width:0;
+  max-width:100%;
+}
+.file-meta{
+  font-size:12px;
+  opacity:.75;
+}
+.auth-panel{
+  display:grid;
+  gap:8px;
+}
+.auth-row{
+  display:grid;
+  grid-template-columns:120px minmax(0,1fr);
+  gap:8px;
+  align-items:center;
+}
+
+.inline-layout > .object-children{
+  display:flex !important;
+  flex-wrap:wrap !important;
+  gap:6px 14px !important;
+  align-items:flex-start;
+  width:100%;
+  min-width:0;
+}
+
+.inline-layout > .object-children > .api-node{
+  flex:0 0 auto !important;
+  width:auto !important;
+  max-width:100%;
+  min-width:0;
+  margin:0;
+}
+
+.inline-layout > .object-children > .api-node > .param-leaf,
+.inline-layout > .object-children > .api-node > .boolean-row{
+  display:block !important;
+  width:auto !important;
+  min-width:0;
+  margin:0 !important;
+}
+
+.inline-layout .boolean-control{
+  display:inline-flex !important;
+  width:auto !important;
+  max-width:100%;
+  flex:0 0 auto;
+  white-space:nowrap;
+}
+
+.inline-layout .boolean-caption,
+.inline-layout .boolean-state{
+  white-space:nowrap;
+}
+
+@media(max-width:700px){
+  .inline-layout > .object-children{
+    gap:6px 10px !important;
+  }
+
+  .inline-layout .boolean-control{
+    white-space:normal;
+  }
+}
+
+
+.top-boolean-inline{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 14px;
+  align-items:center;
+  width:100%;
+  min-width:0;
+  margin:2px 0 6px;
+}
+
+.top-boolean-inline > .api-node{
+  flex:0 0 auto;
+  width:auto;
+  min-width:0;
+  margin:0;
+}
+
+.top-boolean-inline > .api-node > .param-leaf,
+.top-boolean-inline > .api-node > .boolean-row{
+  display:block !important;
+  width:auto !important;
+  margin:0 !important;
+}
+
+.top-boolean-inline .boolean-control{
+  display:inline-flex !important;
+  width:auto !important;
+  white-space:nowrap;
+}
+
 </style>
 </head>
 
@@ -345,89 +707,99 @@ summary{
 
 </div>
 
-<div class="grid">
+<div class="two-column-layout">
 
-<section class="tile">
-  <h2>リクエスト</h2>
+<div class="left-column">
 
-  <div class="row">
-    <label>HTTPメソッド</label>
-    <input id="method" type="text" readonly>
-  </div>
-
-  <div class="row">
-    <label>送信形式</label>
-    <input id="bodyType" type="text" readonly>
-  </div>
-
-  <div class="row">
-    <label>パラメータ位置</label>
-    <input id="paramLocation" type="text" readonly>
-  </div>
-
-  <div class="row">
-    <label>アクセス先URL</label>
-    <input id="url" type="text" readonly>
-  </div>
-
-  <details id="headerDetails">
-    <summary>
-      HTTPヘッダー
-      <span id="headerCount" class="badge">0</span>
-    </summary>
-
-    <table class="header-table">
-      <thead>
-        <tr>
-          <th>キー</th>
-          <th>値</th>
-        </tr>
-      </thead>
-      <tbody id="headersBody"></tbody>
-    </table>
-  </details>
-</section>
-
-<section class="tile">
+<section class="tile params-tile">
   <h2>パラメータ</h2>
-
   <div id="paramsArea"></div>
-
-  <p class="small">
-    パラメータ構造は assets/api-assets.json の children で定義します。
-    画面では末端項目だけ入力します。
+  <p id="paramsHelp" class="small">
+    パラメータ構造は assets/api-assets.json の定義に従います。
   </p>
 </section>
 
-<section class="tile">
+<details class="compact-detail" id="requestDetails" open>
+  <summary>リクエスト</summary>
+  <div class="compact-detail-content">
+    <div class="row">
+      <label>HTTPメソッド</label>
+      <input id="method" type="text" readonly>
+    </div>
+    <div class="row">
+      <label>送信形式</label>
+      <input id="bodyType" type="text" readonly>
+    </div>
+    <div class="row">
+      <label>パラメータ位置</label>
+      <input id="paramLocation" type="text" readonly>
+    </div>
+    <div class="row">
+      <label>アクセス先URL</label>
+      <input id="url" type="text" readonly>
+    </div>
+  </div>
+</details>
+
+<details class="compact-detail" id="headerDetails">
+  <summary>
+    HTTPヘッダー
+    <span id="headerCount" class="badge">0</span>
+  </summary>
+  <div class="compact-detail-content">
+    <table class="header-table">
+      <thead>
+        <tr><th>キー</th><th>値</th></tr>
+      </thead>
+      <tbody id="headersBody"></tbody>
+    </table>
+  </div>
+</details>
+
+
+<details class="compact-detail" id="authDetails">
+  <summary>認証</summary>
+  <div class="compact-detail-content auth-panel">
+    <div class="auth-row">
+      <label>Bearer Token</label>
+      <input id="authBearer" type="password" autocomplete="off">
+    </div>
+    <div class="auth-row">
+      <label>API Key</label>
+      <input id="authApiKey" type="password" autocomplete="off">
+    </div>
+  </div>
+</details>
+
+</div>
+
+<div class="right-column">
+
+<section class="tile send-tile">
   <h2>送信内容</h2>
-
   <textarea id="body" readonly></textarea>
-
   <div class="actions">
     <button id="preview">送信内容を生成</button>
     <button id="copyBody">送信内容をコピー</button>
     <button id="execute" class="primary">API実行</button>
     <button id="clear">結果クリア</button>
   </div>
-
-  <h2 style="margin-top:14px">状態</h2>
+  <h2 style="margin-top:12px">状態</h2>
   <div id="status" class="status">待機中</div>
 </section>
 
-<section class="tile">
+<section class="tile response-tile">
   <h2>レスポンス</h2>
   <pre id="response">(未実行)</pre>
-
   <div class="actions">
     <button id="copyResponse">レスポンスをコピー</button>
   </div>
 </section>
 
 </div>
+
 </div>
-
-
+</div>
 
 <div id="confirmModal" class="modal-backdrop" aria-hidden="true">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle" style="width:min(520px,94vw)">
@@ -506,14 +878,223 @@ function renderHeaders(headers){
 function createValueControl(node){
   const row=document.createElement("div");
   row.className="param-leaf";
+
   const label=document.createElement("label");
   label.textContent=node.label || node.name || "値";
+
+  if(node.required===true){
+    const mark=document.createElement("span");
+    mark.className="required-mark";
+    mark.textContent="*";
+    label.appendChild(mark);
+  }
+
+  const valueType=String(node.valueType||"").toLowerCase();
+
+  if(valueType==="file"){
+    const control=document.createElement("div");
+    control.className="file-control";
+
+    const input=document.createElement("input");
+    input.type="file";
+    input.className="node-value file-value";
+    input.dataset.valueType="file";
+    input.dataset.encoding=node.encoding||"none";
+
+    if(node.accept){
+      input.accept=node.accept;
+    }
+
+    if(node.multiple===true){
+      input.multiple=true;
+    }
+
+    const meta=document.createElement("span");
+    meta.className="file-meta";
+    meta.textContent="未選択";
+
+    input.addEventListener("change",()=>{
+      const files=Array.from(input.files||[]);
+
+      if(files.length===0){
+        meta.textContent="未選択";
+      }else if(files.length===1){
+        const file=files[0];
+        meta.textContent=
+          file.name+" / "+
+          (file.type||"application/octet-stream")+" / "+
+          formatFileSize(file.size);
+      }else{
+        meta.textContent=files.length+" files";
+      }
+    });
+
+    control.append(input,meta);
+    row.append(label,control);
+    return row;
+  }
+
+  if(valueType==="boolean"){
+    row.classList.add("boolean-row");
+
+    const control=document.createElement("div");
+    control.className="boolean-control";
+    control.tabIndex=0;
+
+    const input=document.createElement("input");
+    input.type="checkbox";
+    input.className="node-value boolean-value";
+    input.tabIndex=-1;
+
+    const caption=document.createElement("span");
+    caption.className="boolean-caption";
+    caption.textContent=node.label || node.name || "値";
+
+    const state=document.createElement("span");
+    state.className="boolean-state";
+
+    function applyBooleanState(nextState){
+      input.dataset.boolState=nextState;
+
+      if(nextState==="true"){
+        input.indeterminate=false;
+        input.checked=true;
+        state.textContent="true";
+      }else if(nextState==="false"){
+        input.indeterminate=false;
+        input.checked=false;
+        state.textContent="false";
+      }else{
+        input.indeterminate=true;
+        input.checked=false;
+        state.textContent="未指定";
+      }
+    }
+
+    const hasDefault=
+      Object.prototype.hasOwnProperty.call(node,"default");
+
+    const hasLegacyValue=
+      Object.prototype.hasOwnProperty.call(node,"value");
+
+    if(hasDefault){
+      applyBooleanState(
+        node.default===true ? "true" : "false"
+      );
+    }else if(
+      hasLegacyValue &&
+      typeof node.value==="boolean"
+    ){
+      applyBooleanState(
+        node.value ? "true" : "false"
+      );
+    }else{
+      applyBooleanState("unset");
+    }
+
+    function nextBooleanState(){
+      const current=
+        input.dataset.boolState || "unset";
+
+      if(current==="unset"){
+        applyBooleanState("true");
+      }else if(current==="true"){
+        applyBooleanState("false");
+      }else{
+        applyBooleanState("unset");
+      }
+    }
+
+    function handleBooleanToggle(e){
+      e.preventDefault();
+      e.stopPropagation();
+      nextBooleanState();
+    }
+
+    // checkbox本体は表示専用。
+    // クリック操作は親controlに一本化し、
+    // checked / indeterminate の見た目をJSで確実に反映する。
+    control.addEventListener("click",handleBooleanToggle);
+
+    control.addEventListener("keydown",e=>{
+      if(e.key===" " || e.key==="Enter"){
+        handleBooleanToggle(e);
+      }
+    });
+
+    input._applyBooleanState=applyBooleanState;
+    input._nextBooleanState=nextBooleanState;
+
+    control.append(input,caption,state);
+    row.append(control);
+
+    return row;
+  }
+
+  const controlWrap=document.createElement("div");
+  controlWrap.className="special-value-control";
+
   const input=document.createElement("input");
-  input.type="text";
   input.className="node-value";
-  input.value=node.value==null?"":String(node.value);
+  input.dataset.valueType=valueType;
+
+  if(valueType==="number"){
+    input.type="number";
+    input.step="any";
+  }else{
+    input.type="text";
+  }
+
+  const hasDefault=
+    Object.prototype.hasOwnProperty.call(node,"default");
+
+  const hasLegacyValue=
+    Object.prototype.hasOwnProperty.call(node,"value");
+
+  if(hasDefault){
+    input.value=node.default==null?"":String(node.default);
+  }else if(hasLegacyValue){
+    input.value=node.value==null?"":String(node.value);
+  }else{
+    input.value="";
+  }
+
   input.placeholder=node.placeholder||"";
-  row.append(label,input);
+  input.dataset.special=node.special||"";
+  input.dataset.specialFormat=node.format||"";
+  input.dataset.specialTimezone=node.timezone||"";
+  input.dataset.encoding=node.encoding||"none";
+
+  if(node.special){
+    input.readOnly=true;
+    input.placeholder=
+      node.special==="uuid"
+        ? "UUIDを自動生成"
+        : node.special==="datetime"
+          ? "日時を自動生成"
+          : "自動生成";
+
+    const regenerate=document.createElement("button");
+    regenerate.type="button";
+    regenerate.textContent="再生成";
+    regenerate.className="special-regenerate";
+
+    regenerate.onclick=()=>{
+      try{
+        regenerateSpecialInput(input);
+        updatePreviewFromCurrentValues();
+      }catch(e){
+        $("status").textContent=
+          "特殊値生成エラー: "+e.message;
+      }
+    };
+
+    controlWrap.append(input,regenerate);
+  }else{
+    controlWrap.appendChild(input);
+  }
+
+  row.append(label,controlWrap);
   return row;
 }
 
@@ -530,6 +1111,12 @@ function createNode(node, isArrayItem=false){
   wrap.className="api-node";
   wrap.dataset.nodeType=node.type;
   wrap.dataset.nodeName=node.name||"";
+  wrap.dataset.special=node.special||"";
+  wrap.dataset.specialFormat=node.format||"";
+  wrap.dataset.specialTimezone=node.timezone||"";
+  wrap.dataset.valueType=node.valueType||"";
+  wrap.dataset.required=node.required===true?"true":"false";
+  wrap.dataset.nullable=node.nullable===true?"true":"false";
 
   if(node.type==="value"){
     wrap.appendChild(createValueControl(node));
@@ -559,6 +1146,7 @@ function createNode(node, isArrayItem=false){
   group.appendChild(title);
 
   if(node.type==="object"){
+    if(node.layout==="inline") group.classList.add("inline-layout");
     const children=document.createElement("div");
     children.className="object-children";
     (node.children||[]).forEach(child=>{
@@ -633,10 +1221,71 @@ function renumberArray(arrayNode){
 }
 
 function renderParams(params){
-  $("paramsArea").innerHTML="";
-  (params||[]).forEach(p=>{
-    if(p.enabled!==false) $("paramsArea").appendChild(createNode(p));
+  const area=$("paramsArea");
+  area.innerHTML="";
+
+  const enabledParams=(params||[]).filter(
+    item=>item.enabled!==false
+  );
+
+  if(enabledParams.length===0){
+    area.classList.remove("has-params");
+    area.classList.add("no-params");
+
+    const none=document.createElement("div");
+    none.className="small";
+    none.textContent="（なし）";
+    area.appendChild(none);
+
+    $("paramsHelp").style.display="none";
+    return;
+  }
+
+  area.classList.remove("no-params");
+  area.classList.add("has-params");
+  $("paramsHelp").style.display="";
+
+  let booleanGroup=null;
+
+  function flushBooleanGroup(){
+    if(
+      booleanGroup &&
+      booleanGroup.children.length>0
+    ){
+      area.appendChild(booleanGroup);
+    }
+
+    booleanGroup=null;
+  }
+
+  enabledParams.forEach(p=>{
+    const normalized=normalizeNode(p);
+
+    const isTopBoolean=
+      normalized.type==="value" &&
+      String(normalized.valueType||"").toLowerCase()==="boolean";
+
+    if(isTopBoolean){
+      if(!booleanGroup){
+        booleanGroup=document.createElement("div");
+        booleanGroup.className="top-boolean-inline";
+      }
+
+      booleanGroup.appendChild(
+        createNode(p)
+      );
+
+      return;
+    }
+
+    flushBooleanGroup();
+
+    area.appendChild(
+      createNode(p)
+    );
   });
+
+  flushBooleanGroup();
 }
 
 function nodeValue(node){
@@ -644,8 +1293,88 @@ function nodeValue(node){
 
   if(type==="value"){
     const input=node.querySelector(":scope .node-value");
+    const valueType=(node.dataset.valueType||"").toLowerCase();
+    const required=node.dataset.required==="true";
+    const nullable=node.dataset.nullable==="true";
+    const name=node.dataset.nodeName||"パラメータ";
+
+    if(valueType==="file"){
+      const files=Array.from(input.files||[]);
+
+      if(files.length===0){
+        if(required){
+          throw new Error("「"+name+"」は必須です。");
+        }
+        return {present:false,value:null};
+      }
+
+      return {present:true,value:files};
+    }
+
+    if(valueType==="boolean"){
+      const boolState=
+        input.dataset.boolState || "unset";
+
+      if(boolState==="unset"){
+        if(required){
+          if(nullable){
+            return {present:true,value:null};
+          }
+
+          throw new Error(
+            "「"+name+"」は必須です。"
+          );
+        }
+
+        return {present:false,value:null};
+      }
+
+      return {
+        present:true,
+        value:boolState==="true"
+      };
+    }
+
+    if(input && input.value.trim()==="" && input.dataset.special){
+      regenerateSpecialInput(input);
+    }
     const raw=input.value;
-    if(raw.trim()==="") return {present:false,value:null};
+    if(raw.trim()===""){
+      if(required){
+        if(nullable) return {present:true,value:null};
+        throw new Error("「"+name+"」は必須です。");
+      }
+      return {present:false,value:null};
+    }
+    if(valueType==="string"){
+      const encoding=(input.dataset.encoding||"none").toLowerCase();
+
+      if(encoding==="quoted-printable"){
+        return {
+          present:true,
+          value:quotedPrintableEncodeText(raw)
+        };
+      }
+
+      if(encoding==="base64"){
+        const bytes=new TextEncoder().encode(raw);
+        let binary="";
+        for(const b of bytes){
+          binary+=String.fromCharCode(b);
+        }
+        return {
+          present:true,
+          value:btoa(binary)
+        };
+      }
+
+      return {present:true,value:raw};
+    }
+    if(valueType==="number"){
+      const n=Number(raw);
+      if(!Number.isFinite(n)) throw new Error("「"+name+"」には数値を入力してください。");
+      return {present:true,value:n};
+    }
     return {present:true,value:parseSimple(raw)};
   }
 
@@ -801,14 +1530,366 @@ function applySpecialValues(){
   }
 }
 
+
+function generateUuid(){
+  if(
+    window.crypto &&
+    typeof window.crypto.randomUUID==="function"
+  ){
+    return window.crypto.randomUUID();
+  }
+
+  const bytes=new Uint8Array(16);
+
+  if(window.crypto && window.crypto.getRandomValues){
+    window.crypto.getRandomValues(bytes);
+  }else{
+    for(let i=0;i<bytes.length;i++){
+      bytes[i]=Math.floor(Math.random()*256);
+    }
+  }
+
+  bytes[6]=(bytes[6]&0x0f)|0x40;
+  bytes[8]=(bytes[8]&0x3f)|0x80;
+
+  const hex=Array.from(
+    bytes,
+    b=>b.toString(16).padStart(2,"0")
+  );
+
+  return [
+    hex.slice(0,4).join(""),
+    hex.slice(4,6).join(""),
+    hex.slice(6,8).join(""),
+    hex.slice(8,10).join(""),
+    hex.slice(10,16).join("")
+  ].join("-");
+}
+
+function formatDateTime(date,format,timezone){
+  const utc=
+    String(timezone||"local").toLowerCase()==="utc";
+
+  const year=utc ? date.getUTCFullYear() : date.getFullYear();
+  const month=(utc ? date.getUTCMonth() : date.getMonth())+1;
+  const day=utc ? date.getUTCDate() : date.getDate();
+  const hour=utc ? date.getUTCHours() : date.getHours();
+  const minute=utc ? date.getUTCMinutes() : date.getMinutes();
+  const second=utc ? date.getUTCSeconds() : date.getSeconds();
+  const ms=utc ? date.getUTCMilliseconds() : date.getMilliseconds();
+
+  const values={
+    yyyy:String(year).padStart(4,"0"),
+    MM:String(month).padStart(2,"0"),
+    dd:String(day).padStart(2,"0"),
+    HH:String(hour).padStart(2,"0"),
+    mm:String(minute).padStart(2,"0"),
+    ss:String(second).padStart(2,"0"),
+    SSS:String(ms).padStart(3,"0")
+  };
+
+  let result=
+    format || "yyyy-MM-dd HH:mm:ss";
+
+  result=result.replace(/'([^']*)'/g,"$1");
+
+  return result.replace(
+    /yyyy|SSS|MM|dd|HH|mm|ss/g,
+    token=>values[token]
+  );
+}
+
+function generateSpecialInputValue(input){
+  const special=
+    (input.dataset.special||"").toLowerCase();
+
+  if(!special){
+    return null;
+  }
+
+  if(special==="uuid"){
+    let value=generateUuid();
+
+    const format=
+      (input.dataset.specialFormat||"default")
+        .toLowerCase();
+
+    if(format==="compact"){
+      value=value.replace(/-/g,"");
+    }else if(format!=="default" && format!==""){
+      throw new Error(
+        "未対応のUUID formatです: "+format
+      );
+    }
+
+    return value;
+  }
+
+  if(special==="datetime"){
+    const timezone=
+      (input.dataset.specialTimezone||"local")
+        .toLowerCase();
+
+    if(timezone!=="local" && timezone!=="utc"){
+      throw new Error(
+        "未対応のdatetime timezoneです: "+timezone
+      );
+    }
+
+    return formatDateTime(
+      new Date(),
+      input.dataset.specialFormat||
+        "yyyy-MM-dd HH:mm:ss",
+      timezone
+    );
+  }
+
+  throw new Error(
+    "未対応のspecialです: "+special
+  );
+}
+
+function regenerateSpecialInput(input){
+  if(!input || !input.dataset.special){
+    return;
+  }
+
+  input.value=
+    generateSpecialInputValue(input);
+}
+
+function ensureSpecialValues(){
+  const inputs=
+    $("paramsArea").querySelectorAll(
+      '.node-value[data-special]:not([data-special=""])'
+    );
+
+  for(const input of inputs){
+    if(input.value.trim()===""){
+      regenerateSpecialInput(input);
+    }
+  }
+}
+
+async function updatePreviewFromCurrentValues(){
+  const p=await prepareRequest();
+
+  $("url").value=p.url;
+
+  $("body").value=p.bodyPreview || "";
+}
+
+
+function formatFileSize(bytes){
+  if(bytes<1024) return bytes+" B";
+  if(bytes<1024*1024) return (bytes/1024).toFixed(1)+" KB";
+  if(bytes<1024*1024*1024) return (bytes/(1024*1024)).toFixed(1)+" MB";
+  return (bytes/(1024*1024*1024)).toFixed(1)+" GB";
+}
+
+function fileToBase64(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      const result=String(reader.result||"");
+      const comma=result.indexOf(",");
+      resolve(comma>=0?result.slice(comma+1):result);
+    };
+    reader.onerror=()=>reject(
+      reader.error||new Error("ファイル読込に失敗しました")
+    );
+    reader.readAsDataURL(file);
+  });
+}
+
+function quotedPrintableEncodeBytes(bytes){
+  let out="";
+  let lineLength=0;
+
+  function appendToken(token){
+    if(lineLength+token.length>73){
+      out+="=\r\n";
+      lineLength=0;
+    }
+    out+=token;
+    lineLength+=token.length;
+  }
+
+  for(const b of bytes){
+    const printable=
+      (b>=33 && b<=60) ||
+      (b>=62 && b<=126);
+
+    if(printable || b===32 || b===9){
+      appendToken(String.fromCharCode(b));
+    }else{
+      appendToken(
+        "="+b.toString(16).toUpperCase().padStart(2,"0")
+      );
+    }
+  }
+
+  return out;
+}
+
+function quotedPrintableEncodeText(text){
+  return quotedPrintableEncodeBytes(
+    new TextEncoder().encode(String(text))
+  );
+}
+
+function fileToQuotedPrintable(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        resolve(
+          quotedPrintableEncodeBytes(
+            new Uint8Array(reader.result)
+          )
+        );
+      }catch(e){
+        reject(e);
+      }
+    };
+    reader.onerror=()=>reject(
+      reader.error||new Error("ファイル読込に失敗しました")
+    );
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function collectFileInputs(){
+  return Array.from(
+    $("paramsArea").querySelectorAll(
+      'input.file-value[type="file"]'
+    )
+  );
+}
+
+function getFileParamName(input){
+  const node=input.closest(".api-node");
+  return node?node.dataset.nodeName:"";
+}
+
+function fileSummary(){
+  return collectFileInputs()
+    .map(input=>({
+      name:getFileParamName(input),
+      encoding:input.dataset.encoding||"none",
+      files:Array.from(input.files||[]).map(file=>({
+        name:file.name,
+        type:file.type||"application/octet-stream",
+        size:file.size
+      }))
+    }))
+    .filter(x=>x.files.length);
+}
+
+function xmlEscape(value){
+  return String(value)
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&apos;");
+}
+
+function valueToXml(name,value){
+  if(Array.isArray(value)){
+    return value.map(v=>valueToXml(name,v)).join("");
+  }
+
+  if(value===null){
+    return `<${name} xsi:nil="true"/>`;
+  }
+
+  if(value && typeof value==="object" && !(value instanceof File)){
+    let inner="";
+    for(const [k,v] of Object.entries(value)){
+      inner+=valueToXml(k,v);
+    }
+    return `<${name}>${inner}</${name}>`;
+  }
+
+  return `<${name}>${xmlEscape(value)}</${name}>`;
+}
+
+function paramsToXml(params,options){
+  const root=(options&&options.root)||"request";
+  const declaration=!options || options.declaration!==false;
+
+  let inner="";
+  for(const [k,v] of Object.entries(params)){
+    inner+=valueToXml(k,v);
+  }
+
+  let xml=`<${root}>${inner}</${root}>`;
+
+  if(declaration){
+    xml='<?xml version="1.0" encoding="UTF-8"?>\n'+xml;
+  }
+
+  return xml;
+}
+
+function applyAuth(asset,headers,url){
+  const auth=asset.auth||{};
+
+  if(auth.type==="bearer"){
+    const token=$("authBearer").value.trim();
+    if(token){
+      headers["Authorization"]="Bearer "+token;
+    }
+  }else if(auth.type==="apiKey"){
+    const key=$("authApiKey").value.trim();
+
+    if(key){
+      const target=auth.in||"header";
+      const name=auth.name||"X-API-Key";
+
+      if(target==="query"){
+        url+=(url.includes("?")?"&":"?")+
+          encodeURIComponent(name)+"="+
+          encodeURIComponent(key);
+      }else{
+        headers[name]=key;
+      }
+    }
+  }
+
+  return url;
+}
+
 function buildParams(){
   const obj={};
-  for(const node of $("paramsArea").children){
-    if(!node.classList.contains("api-node")) continue;
+
+  const nodes=[];
+
+  for(const child of $("paramsArea").children){
+    if(child.classList.contains("api-node")){
+      nodes.push(child);
+      continue;
+    }
+
+    if(child.classList.contains("top-boolean-inline")){
+      for(const node of child.children){
+        if(node.classList.contains("api-node")){
+          nodes.push(node);
+        }
+      }
+    }
+  }
+
+  for(const node of nodes){
     const r=nodeValue(node);
     const name=node.dataset.nodeName;
-    if(r.present && name) obj[name]=r.value;
+
+    if(r.present && name){
+      obj[name]=r.value;
+    }
   }
+
   return obj;
 }
 
@@ -842,65 +1923,220 @@ function encodePairs(pairs){
   return pairs.map(([k,v])=>encodeURIComponent(k)+"="+encodeURIComponent(v)).join("&");
 }
 
-function prepareRequest(){
+async function prepareRequest(){
   const asset=API_ASSETS[$("assetSelect").value];
   const params=buildParams();
   const method=(asset.method||"GET").toUpperCase();
-  const paramLocation=asset.paramLocation||(method==="GET"?"query":"body");
-  const bodyType=asset.bodyType||(method==="GET"?"none":"json");
+  const paramLocation=
+    asset.paramLocation||(method==="GET"?"query":"body");
+  const bodyType=
+    asset.bodyType||(method==="GET"?"none":"json");
   const serialization=asset.serialization||"native";
   const headers=Object.assign({},asset.headers||{});
-  let url=asset.url||"", body=undefined;
+
+  let url=asset.url||"";
+  let body=undefined;
+  let bodyPreview="";
 
   if(paramLocation==="query"){
-    const q=encodePairs(buildPairs(params,serialization==="native"?"bracket":serialization));
-    if(q) url+=(url.includes("?")?"&":"?")+q;
+    const q=encodePairs(
+      buildPairs(
+        params,
+        serialization==="native"?"bracket":serialization
+      )
+    );
+
+    if(q){
+      url+=(url.includes("?")?"&":"?")+q;
+    }
+
+    bodyPreview=url;
+
   }else if(paramLocation==="body"){
-    if(bodyType==="json"){
-      body=JSON.stringify(params);
-      if(!headers["Content-Type"]) headers["Content-Type"]="application/json; charset=UTF-8";
+    if(bodyType==="json" || bodyType==="xml"){
+      const converted={};
+
+      for(const [key,value] of Object.entries(params)){
+        if(Array.isArray(value) && value.length && value[0] instanceof File){
+          const input=collectFileInputs().find(
+            x=>getFileParamName(x)===key
+          );
+
+          const encoding=
+            input?(input.dataset.encoding||"none"):"none";
+
+          if(
+            encoding!=="base64" &&
+            encoding!=="quoted-printable"
+          ){
+            throw new Error(
+              `${bodyType.toUpperCase()}でfileを送信する場合は encoding に base64 または quoted-printable を指定してください。`
+            );
+          }
+
+          const values=[];
+          for(const file of value){
+            values.push(
+              encoding==="base64"
+                ? await fileToBase64(file)
+                : await fileToQuotedPrintable(file)
+            );
+          }
+
+          converted[key]=
+            input && input.multiple
+              ? values
+              : values[0];
+
+        }else{
+          converted[key]=value;
+        }
+      }
+
+      if(bodyType==="json"){
+        body=JSON.stringify(converted);
+        bodyPreview=JSON.stringify(converted,null,2);
+
+        if(!headers["Content-Type"]){
+          headers["Content-Type"]=
+            "application/json; charset=UTF-8";
+        }
+      }else{
+        body=paramsToXml(converted,asset.xml||{});
+        bodyPreview=body;
+
+        if(!headers["Content-Type"]){
+          headers["Content-Type"]=
+            "application/xml; charset=UTF-8";
+        }
+      }
+
     }else if(bodyType==="form"){
-      body=encodePairs(buildPairs(params,serialization==="native"?"bracket":serialization));
-      if(!headers["Content-Type"]) headers["Content-Type"]="application/x-www-form-urlencoded; charset=UTF-8";
+      body=encodePairs(
+        buildPairs(
+          params,
+          serialization==="native"?"bracket":serialization
+        )
+      );
+      bodyPreview=body;
+
+      if(!headers["Content-Type"]){
+        headers["Content-Type"]=
+          "application/x-www-form-urlencoded; charset=UTF-8";
+      }
+
+    }else if(bodyType==="multipart"){
+      const form=new FormData();
+
+      for(const [key,value] of Object.entries(params)){
+        if(Array.isArray(value) && value.length && value[0] instanceof File){
+          for(const file of value){
+            form.append(key,file,file.name);
+          }
+        }else if(value!==null && typeof value==="object"){
+          form.append(key,JSON.stringify(value));
+        }else{
+          form.append(key,value==null?"":String(value));
+        }
+      }
+
+      body=form;
+
+      // boundaryを含むContent-Typeはブラウザ側で生成する。
+      delete headers["Content-Type"];
+
+      const lines=["multipart/form-data"];
+      for(const group of fileSummary()){
+        for(const file of group.files){
+          lines.push(
+            `${group.name}: ${file.name} / ${file.type} / ${formatFileSize(file.size)}`
+          );
+        }
+      }
+      bodyPreview=lines.join("\n");
+
+    }else if(bodyType==="binary"){
+      const inputs=collectFileInputs().filter(
+        x=>(x.files||[]).length>0
+      );
+
+      if(inputs.length!==1 || inputs[0].files.length!==1){
+        throw new Error(
+          "binary送信ではファイルを1件だけ選択してください。"
+        );
+      }
+
+      const input=inputs[0];
+      const file=input.files[0];
+      const encoding=(input.dataset.encoding||"none").toLowerCase();
+
+      if(encoding==="base64"){
+        body=await fileToBase64(file);
+        headers["Content-Type"]="text/plain; charset=UTF-8";
+      }else if(encoding==="quoted-printable"){
+        body=await fileToQuotedPrintable(file);
+        headers["Content-Type"]="text/plain; charset=UTF-8";
+        headers["Content-Transfer-Encoding"]="quoted-printable";
+      }else{
+        body=file;
+        if(!headers["Content-Type"]){
+          headers["Content-Type"]=
+            file.type||"application/octet-stream";
+        }
+      }
+
+      bodyPreview=[
+        "binary",
+        "name: "+file.name,
+        "type: "+(file.type||"application/octet-stream"),
+        "size: "+formatFileSize(file.size),
+        "encoding: "+encoding
+      ].join("\n");
+
     }else if(bodyType==="raw"){
       body=$("body").value;
+      bodyPreview=body||"";
     }
   }
-  return {asset,params,method,paramLocation,bodyType,serialization,url,headers,body};
+
+  url=applyAuth(asset,headers,url);
+
+  return {
+    asset,
+    params,
+    method,
+    paramLocation,
+    bodyType,
+    serialization,
+    url,
+    headers,
+    body,
+    bodyPreview
+  };
 }
 
-function showPreview(){
+async function showPreview(){
   try{
-    applySpecialValues();
-    const p=prepareRequest();
-    $("url").value=p.url;
-    if(p.paramLocation==="query") $("body").value=p.url;
-    else if(p.bodyType==="json") $("body").value=JSON.stringify(p.params,null,2);
-    else $("body").value=p.body||"";
-  }catch(e){ alert(e.message); }
+    ensureSpecialValues();
+    await updatePreviewFromCurrentValues();
+  }catch(e){
+    alert(e.message);
+  }
 }
 
 async function execute(){
   let p;
 
   try{
-    applySpecialValues();
-    p=prepareRequest();
+    // specialは未設定の場合のみ生成する。
+    // 保存・履歴・ファイルから読み込んだ値はそのまま使用する。
+    ensureSpecialValues();
 
-    // API実行時は必ず実際の送信内容を画面へ反映する。
+    p=await prepareRequest();
+
     $("url").value=p.url;
 
-    if(p.paramLocation==="query"){
-      $("body").value=p.url;
-    }else if(p.bodyType==="json"){
-      $("body").value=JSON.stringify(
-        p.params,
-        null,
-        2
-      );
-    }else{
-      $("body").value=p.body || "";
-    }
+    $("body").value=p.bodyPreview || "";
 
   }catch(e){
     $("status").textContent=
@@ -926,7 +2162,8 @@ async function execute(){
       headers:{
         "X-Proxy-Target":p.url,
         "X-Proxy-Method":p.method,
-        "X-Proxy-Headers":JSON.stringify(p.headers)
+        "X-Proxy-Headers":JSON.stringify(p.headers),
+        "X-Proxy-Body-Type":p.bodyType
       },
       body:p.body
     });
@@ -951,10 +2188,7 @@ async function execute(){
       url:p.url,
       method:p.method,
       headers:p.headers,
-
-      // 画面表示と実送信内容を一致させる。
       body:$("body").value,
-
       responseText:display,
       status:response.status,
       statusText:response.statusText,
@@ -1092,7 +2326,100 @@ function renderMarkdown(markdown){
     }
   }
 
-  for(const line of lines){
+  function splitTableRow(line){
+    let s=line.trim();
+
+    if(s.startsWith("|")){
+      s=s.slice(1);
+    }
+
+    if(s.endsWith("|")){
+      s=s.slice(0,-1);
+    }
+
+    return s
+      .split("|")
+      .map(cell=>cell.trim());
+  }
+
+  function isTableSeparator(line){
+    const cells=splitTableRow(line);
+
+    if(cells.length===0){
+      return false;
+    }
+
+    return cells.every(cell=>
+      /^:?-{3,}:?$/.test(cell)
+    );
+  }
+
+  function renderTable(startIndex){
+    const headerCells=splitTableRow(lines[startIndex]);
+    let i=startIndex+2;
+    const bodyRows=[];
+
+    while(
+      i<lines.length &&
+      lines[i].includes("|") &&
+      lines[i].trim()!==""
+    ){
+      bodyRows.push(
+        splitTableRow(lines[i])
+      );
+      i++;
+    }
+
+    const parts=[];
+    parts.push("<table>");
+    parts.push("<thead><tr>");
+
+    headerCells.forEach(cell=>{
+      parts.push(
+        "<th>"+
+        renderInlineMarkdown(cell)+
+        "</th>"
+      );
+    });
+
+    parts.push("</tr></thead>");
+
+    if(bodyRows.length){
+      parts.push("<tbody>");
+
+      bodyRows.forEach(row=>{
+        parts.push("<tr>");
+
+        for(let c=0;c<headerCells.length;c++){
+          const value=
+            c<row.length
+              ? row[c]
+              : "";
+
+          parts.push(
+            "<td>"+
+            renderInlineMarkdown(value)+
+            "</td>"
+          );
+        }
+
+        parts.push("</tr>");
+      });
+
+      parts.push("</tbody>");
+    }
+
+    parts.push("</table>");
+
+    return {
+      html:parts.join(""),
+      nextIndex:i
+    };
+  }
+
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+
     if(line.startsWith("```")){
       closeList();
 
@@ -1111,14 +2438,34 @@ function renderMarkdown(markdown){
       continue;
     }
 
+    // Markdown table:
+    // | A | B |
+    // |---|---|
+    // | 1 | 2 |
+    if(
+      line.includes("|") &&
+      i+1<lines.length &&
+      isTableSeparator(lines[i+1])
+    ){
+      closeList();
+
+      const table=renderTable(i);
+      html.push(table.html);
+
+      i=table.nextIndex-1;
+      continue;
+    }
+
     let m;
 
     if((m=line.match(/^(#{1,6})\s+(.*)$/))){
       closeList();
       const level=m[1].length;
+
       html.push(
         `<h${level}>${renderInlineMarkdown(m[2])}</h${level}>`
       );
+
       continue;
     }
 
@@ -1128,7 +2475,11 @@ function renderMarkdown(markdown){
         listType="ul";
         html.push("<ul>");
       }
-      html.push(`<li>${renderInlineMarkdown(m[1])}</li>`);
+
+      html.push(
+        `<li>${renderInlineMarkdown(m[1])}</li>`
+      );
+
       continue;
     }
 
@@ -1138,15 +2489,21 @@ function renderMarkdown(markdown){
         listType="ol";
         html.push("<ol>");
       }
-      html.push(`<li>${renderInlineMarkdown(m[1])}</li>`);
+
+      html.push(
+        `<li>${renderInlineMarkdown(m[1])}</li>`
+      );
+
       continue;
     }
 
     if((m=line.match(/^>\s?(.*)$/))){
       closeList();
+
       html.push(
         `<blockquote>${renderInlineMarkdown(m[1])}</blockquote>`
       );
+
       continue;
     }
 
@@ -1157,7 +2514,10 @@ function renderMarkdown(markdown){
     }
 
     closeList();
-    html.push(`<p>${renderInlineMarkdown(line)}</p>`);
+
+    html.push(
+      `<p>${renderInlineMarkdown(line)}</p>`
+    );
   }
 
   closeList();
@@ -1256,6 +2616,20 @@ function setNodeFromValue(node,value){
 
   if(type==="value"){
     const input=node.querySelector(":scope .node-value");
+    if(!input) return;
+    if((node.dataset.valueType||"").toLowerCase()==="boolean"){
+      if(typeof input._applyBooleanState==="function"){
+        if(value===null || typeof value==="undefined"){
+          input._applyBooleanState("unset");
+        }else{
+          input._applyBooleanState(
+            value===true ? "true" : "false"
+          );
+        }
+      }
+
+      return;
+    }
     input.value=value==null?"":String(value);
     return;
   }
