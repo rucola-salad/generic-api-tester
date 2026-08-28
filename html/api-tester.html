@@ -160,6 +160,10 @@ button:disabled{opacity:.55;cursor:default}
   font:13px Consolas,monospace;
   white-space:pre-wrap;
 }
+.status.warning{
+  background:#fff7d6;
+  border:1px solid #d6a700;
+}
 pre{
   margin:0;
   background:var(--code);
@@ -389,6 +393,37 @@ summary{
 .special-value-control .special-regenerate{
   flex:0 0 auto;
   white-space:nowrap;
+}
+
+.choice-select{
+  width:100%;
+  min-width:0;
+  padding:5px 7px;
+}
+
+.radio-options{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px 14px;
+  align-items:center;
+}
+
+.radio-option{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  white-space:nowrap;
+  cursor:pointer;
+}
+
+.radio-option input[type="radio"]{
+  width:auto !important;
+  min-width:0;
+  margin:0;
+}
+
+.special-auto-display{
+  font-style:italic;
 }
 
 .send-tile textarea{
@@ -875,6 +910,49 @@ function renderHeaders(headers){
   $("headerDetails").open=false;
 }
 
+function encodeChoiceValue(value){
+  if(typeof value==="undefined"){
+    return JSON.stringify({kind:"undefined"});
+  }
+
+  return JSON.stringify({kind:"value",value:value});
+}
+
+function decodeChoiceValue(encoded){
+  const data=JSON.parse(encoded);
+  return data.kind==="undefined" ? undefined : data.value;
+}
+
+function sameChoiceValue(a,b){
+  return JSON.stringify(a)===JSON.stringify(b);
+}
+
+function getInitialNodeValue(node){
+  if(Object.prototype.hasOwnProperty.call(node,"default")){
+    return {has:true,value:node.default};
+  }
+
+  if(Object.prototype.hasOwnProperty.call(node,"value")){
+    return {has:true,value:node.value};
+  }
+
+  return {has:false,value:undefined};
+}
+
+function specialDisplayText(node){
+  const special=String(node.special||"").toLowerCase();
+
+  if(special==="uuid"){
+    return "🔄 API実行時にUUIDを生成";
+  }
+
+  if(special==="datetime"){
+    return "🔄 API実行時に現在日時を生成";
+  }
+
+  return "🔄 API実行時に自動生成";
+}
+
 function createValueControl(node){
   const row=document.createElement("div");
   row.className="param-leaf";
@@ -890,6 +968,7 @@ function createValueControl(node){
   }
 
   const valueType=String(node.valueType||"").toLowerCase();
+  const inputType=String(node.inputType||"").toLowerCase();
 
   if(valueType==="file"){
     const control=document.createElement("div");
@@ -971,30 +1050,16 @@ function createValueControl(node){
       }
     }
 
-    const hasDefault=
-      Object.prototype.hasOwnProperty.call(node,"default");
+    const initial=getInitialNodeValue(node);
 
-    const hasLegacyValue=
-      Object.prototype.hasOwnProperty.call(node,"value");
-
-    if(hasDefault){
-      applyBooleanState(
-        node.default===true ? "true" : "false"
-      );
-    }else if(
-      hasLegacyValue &&
-      typeof node.value==="boolean"
-    ){
-      applyBooleanState(
-        node.value ? "true" : "false"
-      );
+    if(initial.has && typeof initial.value==="boolean"){
+      applyBooleanState(initial.value ? "true" : "false");
     }else{
       applyBooleanState("unset");
     }
 
     function nextBooleanState(){
-      const current=
-        input.dataset.boolState || "unset";
+      const current=input.dataset.boolState || "unset";
 
       if(current==="unset"){
         applyBooleanState("true");
@@ -1011,11 +1076,7 @@ function createValueControl(node){
       nextBooleanState();
     }
 
-    // checkbox本体は表示専用。
-    // クリック操作は親controlに一本化し、
-    // checked / indeterminate の見た目をJSで確実に反映する。
     control.addEventListener("click",handleBooleanToggle);
-
     control.addEventListener("keydown",e=>{
       if(e.key===" " || e.key==="Enter"){
         handleBooleanToggle(e);
@@ -1027,7 +1088,72 @@ function createValueControl(node){
 
     control.append(input,caption,state);
     row.append(control);
+    return row;
+  }
 
+  if(!node.special && inputType==="select"){
+    const select=document.createElement("select");
+    select.className="node-value choice-select";
+    select.dataset.valueType=valueType;
+    select.dataset.inputType="select";
+
+    const placeholder=document.createElement("option");
+    placeholder.value="";
+    placeholder.textContent="（未選択）";
+    placeholder.dataset.unset="true";
+    select.appendChild(placeholder);
+
+    const initial=getInitialNodeValue(node);
+
+    (node.options||[]).forEach(opt=>{
+      const option=document.createElement("option");
+      option.value=encodeChoiceValue(opt.value);
+      option.textContent=opt.label==null ? String(opt.value) : String(opt.label);
+      if(initial.has && sameChoiceValue(opt.value,initial.value)){
+        option.selected=true;
+      }
+      select.appendChild(option);
+    });
+
+    if(!initial.has){
+      select.value="";
+    }
+
+    row.append(label,select);
+    return row;
+  }
+
+  if(!node.special && inputType==="radio"){
+    const control=document.createElement("div");
+    control.className="node-value radio-options";
+    control.dataset.valueType=valueType;
+    control.dataset.inputType="radio";
+
+    const groupName="radio_"+Math.random().toString(36).slice(2);
+    const initial=getInitialNodeValue(node);
+
+    (node.options||[]).forEach(opt=>{
+      const optionLabel=document.createElement("label");
+      optionLabel.className="radio-option";
+
+      const radio=document.createElement("input");
+      radio.type="radio";
+      radio.name=groupName;
+      radio.value=encodeChoiceValue(opt.value);
+      radio.dataset.choiceValue=radio.value;
+
+      if(initial.has && sameChoiceValue(opt.value,initial.value)){
+        radio.checked=true;
+      }
+
+      const caption=document.createElement("span");
+      caption.textContent=opt.label==null ? String(opt.value) : String(opt.label);
+
+      optionLabel.append(radio,caption);
+      control.appendChild(optionLabel);
+    });
+
+    row.append(label,control);
     return row;
   }
 
@@ -1045,16 +1171,9 @@ function createValueControl(node){
     input.type="text";
   }
 
-  const hasDefault=
-    Object.prototype.hasOwnProperty.call(node,"default");
-
-  const hasLegacyValue=
-    Object.prototype.hasOwnProperty.call(node,"value");
-
-  if(hasDefault){
-    input.value=node.default==null?"":String(node.default);
-  }else if(hasLegacyValue){
-    input.value=node.value==null?"":String(node.value);
+  const initial=getInitialNodeValue(node);
+  if(initial.has){
+    input.value=initial.value==null?"":String(initial.value);
   }else{
     input.value="";
   }
@@ -1063,26 +1182,34 @@ function createValueControl(node){
   input.dataset.special=node.special||"";
   input.dataset.specialFormat=node.format||"";
   input.dataset.specialTimezone=node.timezone||"";
+  input.dataset.specialRegenerate=node.regenerate||"ifEmpty";
   input.dataset.encoding=node.encoding||"none";
 
   if(node.special){
     input.readOnly=true;
-    input.placeholder=
-      node.special==="uuid"
-        ? "UUIDを自動生成"
-        : node.special==="datetime"
-          ? "日時を自動生成"
-          : "自動生成";
+
+    if((node.regenerate||"ifEmpty")==="eachRequest"){
+      input.value=specialDisplayText(node);
+      input.classList.add("special-auto-display");
+      input._specialPendingValue=null;
+    }else{
+      input.placeholder=
+        node.special==="uuid"
+          ? "UUIDを自動生成"
+          : node.special==="datetime"
+            ? "日時を自動生成"
+            : "自動生成";
+    }
 
     const regenerate=document.createElement("button");
     regenerate.type="button";
     regenerate.textContent="再生成";
     regenerate.className="special-regenerate";
 
-    regenerate.onclick=()=>{
+    regenerate.onclick=async()=>{
       try{
-        regenerateSpecialInput(input);
-        updatePreviewFromCurrentValues();
+        regenerateSpecialInput(input,true);
+        await updatePreviewFromCurrentValues();
       }catch(e){
         $("status").textContent=
           "特殊値生成エラー: "+e.message;
@@ -1114,7 +1241,9 @@ function createNode(node, isArrayItem=false){
   wrap.dataset.special=node.special||"";
   wrap.dataset.specialFormat=node.format||"";
   wrap.dataset.specialTimezone=node.timezone||"";
+  wrap.dataset.specialRegenerate=node.regenerate||"ifEmpty";
   wrap.dataset.valueType=node.valueType||"";
+  wrap.dataset.inputType=node.inputType||"";
   wrap.dataset.required=node.required===true?"true":"false";
   wrap.dataset.nullable=node.nullable===true?"true":"false";
 
@@ -1288,72 +1417,110 @@ function renderParams(params){
   flushBooleanGroup();
 }
 
-function nodeValue(node){
+function resolveMissingValue(required,nullable,name){
+  if(required){
+    if(nullable){
+      return {present:true,value:null};
+    }
+
+    throw new Error("「"+name+"」は必須です。");
+  }
+
+  return {present:false,value:null};
+}
+
+function getSpecialRawValue(input,options={}){
+  const special=(input.dataset.special||"").toLowerCase();
+  if(!special) return null;
+
+  const regenerate=(input.dataset.specialRegenerate||"ifEmpty").toLowerCase();
+
+  if(regenerate==="eachrequest"){
+    if(input._specialPendingValue==null){
+      if(options.generateSpecial===false){
+        return "";
+      }
+      input._specialPendingValue=generateSpecialInputValue(input);
+    }
+    return String(input._specialPendingValue);
+  }
+
+  if(regenerate==="manual"){
+    return input.value;
+  }
+
+  if(input.value.trim()==="" && options.generateSpecial!==false){
+    regenerateSpecialInput(input,false);
+  }
+
+  return input.value;
+}
+
+function nodeValue(node,options={}){
   const type=node.dataset.nodeType;
 
   if(type==="value"){
     const input=node.querySelector(":scope .node-value");
     const valueType=(node.dataset.valueType||"").toLowerCase();
+    const inputType=(node.dataset.inputType||"").toLowerCase();
     const required=node.dataset.required==="true";
     const nullable=node.dataset.nullable==="true";
     const name=node.dataset.nodeName||"パラメータ";
 
     if(valueType==="file"){
       const files=Array.from(input.files||[]);
-
       if(files.length===0){
-        if(required){
-          throw new Error("「"+name+"」は必須です。");
-        }
-        return {present:false,value:null};
+        return resolveMissingValue(required,nullable,name);
       }
-
       return {present:true,value:files};
     }
 
     if(valueType==="boolean"){
-      const boolState=
-        input.dataset.boolState || "unset";
-
+      const boolState=input.dataset.boolState || "unset";
       if(boolState==="unset"){
-        if(required){
-          if(nullable){
-            return {present:true,value:null};
-          }
-
-          throw new Error(
-            "「"+name+"」は必須です。"
-          );
-        }
-
-        return {present:false,value:null};
+        return resolveMissingValue(required,nullable,name);
       }
-
-      return {
-        present:true,
-        value:boolState==="true"
-      };
+      return {present:true,value:boolState==="true"};
     }
 
-    if(input && input.value.trim()==="" && input.dataset.special){
-      regenerateSpecialInput(input);
-    }
-    const raw=input.value;
-    if(raw.trim()===""){
-      if(required){
-        if(nullable) return {present:true,value:null};
-        throw new Error("「"+name+"」は必須です。");
+    if(inputType==="select"){
+      const selected=input.selectedOptions[0];
+      if(!selected || selected.dataset.unset==="true"){
+        return resolveMissingValue(required,nullable,name);
       }
+      return {present:true,value:decodeChoiceValue(selected.value)};
+    }
+
+    if(inputType==="radio"){
+      const checked=input.querySelector('input[type="radio"]:checked');
+      if(!checked){
+        return resolveMissingValue(required,nullable,name);
+      }
+      return {present:true,value:decodeChoiceValue(checked.value)};
+    }
+
+    if(
+      input.dataset.special &&
+      (input.dataset.specialRegenerate||"ifEmpty").toLowerCase()==="eachrequest" &&
+      options.generateSpecial===false
+    ){
+      // 保存データにはリクエストごとの一時生成値を固定値として残さない。
       return {present:false,value:null};
     }
+
+    const raw=input.dataset.special
+      ? getSpecialRawValue(input,options)
+      : input.value;
+
+    if(String(raw).trim()===""){
+      return resolveMissingValue(required,nullable,name);
+    }
+
     if(valueType==="string"){
       const encoding=(input.dataset.encoding||"none").toLowerCase();
 
       if(encoding==="quoted-printable"){
-        return {
-          present:true,
-          value:quotedPrintableEncodeText(raw)
-        };
+        return {present:true,value:quotedPrintableEncodeText(raw)};
       }
 
       if(encoding==="base64"){
@@ -1362,19 +1529,20 @@ function nodeValue(node){
         for(const b of bytes){
           binary+=String.fromCharCode(b);
         }
-        return {
-          present:true,
-          value:btoa(binary)
-        };
+        return {present:true,value:btoa(binary)};
       }
 
-      return {present:true,value:raw};
+      return {present:true,value:String(raw)};
     }
+
     if(valueType==="number"){
       const n=Number(raw);
-      if(!Number.isFinite(n)) throw new Error("「"+name+"」には数値を入力してください。");
+      if(!Number.isFinite(n)){
+        throw new Error("「"+name+"」には数値を入力してください。");
+      }
       return {present:true,value:n};
     }
+
     return {present:true,value:parseSimple(raw)};
   }
 
@@ -1383,7 +1551,7 @@ function nodeValue(node){
     const children=node.querySelector(":scope > .param-group > .object-children");
     for(const child of children.children){
       if(!child.classList.contains("api-node")) continue;
-      const r=nodeValue(child);
+      const r=nodeValue(child,options);
       const name=child.dataset.nodeName;
       if(r.present && name) obj[name]=r.value;
     }
@@ -1395,9 +1563,22 @@ function nodeValue(node){
     const items=node.querySelectorAll(":scope > .param-group > .array-items > .array-item");
     for(const item of items){
       const child=item.querySelector(":scope > .api-node");
-      const r=nodeValue(child);
+      const r=nodeValue(child,options);
       if(r.present) arr.push(r.value);
     }
+
+    const required=node.dataset.required==="true";
+    const nullable=node.dataset.nullable==="true";
+    const name=node.dataset.nodeName||"パラメータ";
+
+    if(arr.length===0 && required && nullable && items.length===0){
+      return {present:true,value:[]};
+    }
+
+    if(arr.length===0 && required && !nullable && items.length===0){
+      return {present:true,value:[]};
+    }
+
     return {present:arr.length>0,value:arr};
   }
 
@@ -1649,27 +1830,61 @@ function generateSpecialInputValue(input){
   );
 }
 
-function regenerateSpecialInput(input){
+function regenerateSpecialInput(input,force=false){
   if(!input || !input.dataset.special){
     return;
   }
 
-  input.value=
-    generateSpecialInputValue(input);
+  const regenerate=(input.dataset.specialRegenerate||"ifEmpty").toLowerCase();
+  const value=generateSpecialInputValue(input);
+
+  if(regenerate==="eachrequest"){
+    if(force || input._specialPendingValue==null){
+      input._specialPendingValue=value;
+    }
+    return;
+  }
+
+  input.value=value;
 }
 
-function ensureSpecialValues(){
-  const inputs=
-    $("paramsArea").querySelectorAll(
-      '.node-value[data-special]:not([data-special=""])'
-    );
+function ensureSpecialValues(options={}){
+  const inputs=$("paramsArea").querySelectorAll(
+    '.node-value[data-special]:not([data-special=""])'
+  );
 
   for(const input of inputs){
+    const regenerate=(input.dataset.specialRegenerate||"ifEmpty").toLowerCase();
+
+    if(regenerate==="eachrequest"){
+      if(options.regenerateEachRequest===true || input._specialPendingValue==null){
+        regenerateSpecialInput(input,true);
+      }
+      continue;
+    }
+
+    if(regenerate==="manual"){
+      continue;
+    }
+
     if(input.value.trim()===""){
-      regenerateSpecialInput(input);
+      regenerateSpecialInput(input,false);
     }
   }
 }
+
+function clearEachRequestSpecialValues(){
+  const inputs=$("paramsArea").querySelectorAll(
+    '.node-value[data-special]:not([data-special=""])'
+  );
+
+  for(const input of inputs){
+    if((input.dataset.specialRegenerate||"ifEmpty").toLowerCase()==="eachrequest"){
+      input._specialPendingValue=null;
+    }
+  }
+}
+
 
 async function updatePreviewFromCurrentValues(){
   const p=await prepareRequest();
@@ -1861,28 +2076,13 @@ function applyAuth(asset,headers,url){
   return url;
 }
 
-function buildParams(){
+function buildParams(options={}){
   const obj={};
 
-  const nodes=[];
-
-  for(const child of $("paramsArea").children){
-    if(child.classList.contains("api-node")){
-      nodes.push(child);
-      continue;
-    }
-
-    if(child.classList.contains("top-boolean-inline")){
-      for(const node of child.children){
-        if(node.classList.contains("api-node")){
-          nodes.push(node);
-        }
-      }
-    }
-  }
+  const nodes=getTopLevelParamNodes();
 
   for(const node of nodes){
-    const r=nodeValue(node);
+    const r=nodeValue(node,options);
     const name=node.dataset.nodeName;
 
     if(r.present && name){
@@ -2117,7 +2317,8 @@ async function prepareRequest(){
 
 async function showPreview(){
   try{
-    ensureSpecialValues();
+    // eachRequest は「送信内容を生成」を押すたびに新しい値を作る。
+    ensureSpecialValues({regenerateEachRequest:true});
     await updatePreviewFromCurrentValues();
   }catch(e){
     alert(e.message);
@@ -2128,9 +2329,9 @@ async function execute(){
   let p;
 
   try{
-    // specialは未設定の場合のみ生成する。
-    // 保存・履歴・ファイルから読み込んだ値はそのまま使用する。
-    ensureSpecialValues();
+    // 送信内容生成済みの eachRequest 値があれば同じ値を使用する。
+    // 未生成ならAPI実行時に生成する。
+    ensureSpecialValues({regenerateEachRequest:false});
 
     p=await prepareRequest();
 
@@ -2182,7 +2383,7 @@ async function execute(){
 
     $("response").textContent=display;
 
-    addHistory({
+    const historyResult=addHistory({
       assetKey:$("assetSelect").value,
       params:p.params,
       url:p.url,
@@ -2200,8 +2401,15 @@ async function execute(){
       executedAt:new Date().toISOString()
     });
 
+    let historyNote="";
+    if(historyResult && historyResult.trimmed>0){
+      historyNote=` / 履歴容量調整: 古い履歴を${historyResult.trimmed}件削除`;
+    }else if(historyResult && !historyResult.ok){
+      historyNote=" / 履歴保存失敗";
+    }
+
     $("status").textContent=
-      `HTTP ${response.status} ${response.statusText} / ${((performance.now()-started)/1000).toFixed(3)} 秒`;
+      `HTTP ${response.status} ${response.statusText} / ${((performance.now()-started)/1000).toFixed(3)} 秒${historyNote}`;
 
   }catch(e){
     $("status").textContent=
@@ -2211,6 +2419,8 @@ async function execute(){
       String(e);
 
   }finally{
+    // API実行で使用した eachRequest の値は消費済みとして破棄する。
+    clearEachRequestSpecialValues();
     $("execute").disabled=false;
   }
 }
@@ -2226,6 +2436,7 @@ function loadAsset(name){
   renderParams(asset.params||[]);
   $("body").value="";
   $("response").textContent="(未実行)";
+  $("status").classList.remove("warning");
   $("status").textContent="定義読込: "+(asset.label||name);
 }
 
@@ -2572,6 +2783,28 @@ document.addEventListener("keydown",e=>{
 
 const STORAGE_KEY="generic-api-tester.saved-requests.v1";
 
+function isQuotaExceededError(error){
+  return !!error && (
+    error.name==="QuotaExceededError" ||
+    error.name==="NS_ERROR_DOM_QUOTA_REACHED" ||
+    error.code===22 ||
+    error.code===1014
+  );
+}
+
+function trySetLocalStorage(key,value){
+  try{
+    localStorage.setItem(key,value);
+    return {ok:true,quota:false,error:null};
+  }catch(error){
+    return {
+      ok:false,
+      quota:isQuotaExceededError(error),
+      error:error
+    };
+  }
+}
+
 function getSavedRequests(){
   try{
     const raw=localStorage.getItem(STORAGE_KEY);
@@ -2584,7 +2817,10 @@ function getSavedRequests(){
 }
 
 function setSavedRequests(obj){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(obj));
+  return trySetLocalStorage(
+    STORAGE_KEY,
+    JSON.stringify(obj)
+  );
 }
 
 function refreshSavedRequests(selectedName=""){
@@ -2617,19 +2853,47 @@ function setNodeFromValue(node,value){
   if(type==="value"){
     const input=node.querySelector(":scope .node-value");
     if(!input) return;
-    if((node.dataset.valueType||"").toLowerCase()==="boolean"){
+
+    const valueType=(node.dataset.valueType||"").toLowerCase();
+    const inputType=(node.dataset.inputType||"").toLowerCase();
+
+    if(valueType==="boolean"){
       if(typeof input._applyBooleanState==="function"){
         if(value===null || typeof value==="undefined"){
           input._applyBooleanState("unset");
         }else{
-          input._applyBooleanState(
-            value===true ? "true" : "false"
-          );
+          input._applyBooleanState(value===true ? "true" : "false");
         }
       }
-
       return;
     }
+
+    if(input.dataset.special && (input.dataset.specialRegenerate||"ifEmpty").toLowerCase()==="eachrequest"){
+      input._specialPendingValue=null;
+      return;
+    }
+
+    if(inputType==="select"){
+      let matched=false;
+      for(const option of input.options){
+        if(option.dataset.unset==="true") continue;
+        if(sameChoiceValue(decodeChoiceValue(option.value),value)){
+          option.selected=true;
+          matched=true;
+          break;
+        }
+      }
+      if(!matched) input.value="";
+      return;
+    }
+
+    if(inputType==="radio"){
+      for(const radio of input.querySelectorAll('input[type="radio"]')){
+        radio.checked=sameChoiceValue(decodeChoiceValue(radio.value),value);
+      }
+      return;
+    }
+
     input.value=value==null?"":String(value);
     return;
   }
@@ -2638,22 +2902,20 @@ function setNodeFromValue(node,value){
     const children=node.querySelector(
       ":scope > .param-group > .object-children"
     );
+    const source=(value && typeof value==="object" && !Array.isArray(value))
+      ? value
+      : {};
 
     for(const child of children.children){
       if(!child.classList.contains("api-node")) continue;
-
       const name=child.dataset.nodeName;
 
-      if(
-        value &&
-        typeof value==="object" &&
-        !Array.isArray(value) &&
-        Object.prototype.hasOwnProperty.call(value,name)
-      ){
-        setNodeFromValue(child,value[name]);
+      if(Object.prototype.hasOwnProperty.call(source,name)){
+        setNodeFromValue(child,source[name]);
+      }else{
+        resetNodeToUnset(child);
       }
     }
-
     return;
   }
 
@@ -2671,14 +2933,11 @@ function setNodeFromValue(node,value){
 
     value.forEach(itemValue=>{
       addArrayItem(node);
-
       const items=node.querySelectorAll(
         ":scope > .param-group > .array-items > .array-item"
       );
-
       const item=items[items.length-1];
       const child=item.querySelector(":scope > .api-node");
-
       setNodeFromValue(child,itemValue);
     });
 
@@ -2686,18 +2945,174 @@ function setNodeFromValue(node,value){
   }
 }
 
-function applyParamsToScreen(params){
-  for(const node of $("paramsArea").children){
-    if(!node.classList.contains("api-node")) continue;
+function getTopLevelParamNodes(){
+  const nodes=[];
 
+  for(const child of $("paramsArea").children){
+    if(child.classList.contains("api-node")){
+      nodes.push(child);
+    }else if(child.classList.contains("top-boolean-inline")){
+      for(const node of child.children){
+        if(node.classList.contains("api-node")) nodes.push(node);
+      }
+    }
+  }
+
+  return nodes;
+}
+
+function resetNodeToUnset(node){
+  const type=node.dataset.nodeType;
+
+  if(type==="value"){
+    const input=node.querySelector(":scope .node-value");
+    if(!input) return;
+
+    const valueType=(node.dataset.valueType||"").toLowerCase();
+    const inputType=(node.dataset.inputType||"").toLowerCase();
+
+    if(valueType==="boolean"){
+      if(typeof input._applyBooleanState==="function"){
+        input._applyBooleanState("unset");
+      }
+      return;
+    }
+
+    if(input.dataset.special){
+      input._specialPendingValue=null;
+    }
+
+    if(valueType==="file"){
+      input.value="";
+      const meta=node.querySelector(".file-meta");
+      if(meta) meta.textContent="未選択";
+      return;
+    }
+
+    if(inputType==="select"){
+      const unsetOption=Array.from(input.options).find(
+        option=>option.dataset.unset==="true"
+      );
+      if(unsetOption){
+        input.value=unsetOption.value;
+      }else{
+        input.selectedIndex=-1;
+      }
+      return;
+    }
+
+    if(inputType==="radio"){
+      for(const radio of input.querySelectorAll('input[type="radio"]')){
+        radio.checked=false;
+      }
+      return;
+    }
+
+    input.value="";
+    return;
+  }
+
+  if(type==="object"){
+    const children=node.querySelector(
+      ":scope > .param-group > .object-children"
+    );
+    if(!children) return;
+
+    for(const child of children.children){
+      if(child.classList.contains("api-node")){
+        resetNodeToUnset(child);
+      }
+    }
+    return;
+  }
+
+  if(type==="array"){
+    const itemsContainer=node.querySelector(
+      ":scope > .param-group > .array-items"
+    );
+    if(itemsContainer){
+      itemsContainer.innerHTML="";
+    }
+    renumberArray(node);
+  }
+}
+
+function compareLoadedParamsWithAsset(assetParams, loadedParams){
+  const missingInAsset=[];
+  const missingInLoaded=[];
+
+  function enabledDefs(defs){
+    return (Array.isArray(defs)?defs:[]).filter(d=>d && d.enabled!==false && d.name);
+  }
+
+  function compareDefs(defs, data, prefix=""){
+    const obj=(data && typeof data==="object" && !Array.isArray(data)) ? data : {};
+    const active=enabledDefs(defs);
+    const byName=new Map(active.map(d=>[d.name,d]));
+
+    for(const key of Object.keys(obj)){
+      if(!byName.has(key)) missingInAsset.push(prefix+key);
+    }
+
+    for(const def of active){
+      const path=prefix+def.name;
+      if(!Object.prototype.hasOwnProperty.call(obj,def.name)){
+        missingInLoaded.push(path);
+        continue;
+      }
+      const value=obj[def.name];
+      if(def.type==="object"){
+        compareDefs(def.children||[],value,path+".");
+      }else if(def.type==="array" && Array.isArray(value)){
+        const item=def.item||{};
+        if(item.type==="object"){
+          value.forEach((v,i)=>compareDefs(item.children||[],v,`${path}[${i}].`));
+        }
+      }
+    }
+  }
+
+  compareDefs(assetParams||[],loadedParams||{});
+  return {missingInAsset,missingInLoaded};
+}
+
+function formatAssetDifferenceWarning(diff){
+  const lines=[];
+  if(diff.missingInAsset.length){
+    lines.push("現在のAPI定義に存在しない保存項目:");
+    diff.missingInAsset.forEach(x=>lines.push("・"+x));
+  }
+  if(diff.missingInLoaded.length){
+    if(lines.length) lines.push("");
+    lines.push("保存データに存在しないAPI定義項目:");
+    diff.missingInLoaded.forEach(x=>lines.push("・"+x));
+  }
+  if(!lines.length) return "";
+  return "⚠ 保存データと現在のAPI定義に差異があります。\n"+
+    lines.join("\n")+"\n\n読み込み可能な項目のみ復元しました。";
+}
+
+function showLoadResult(message, assetKey, params){
+  const asset=API_ASSETS[assetKey];
+  const diff=compareLoadedParamsWithAsset(asset?.params||[],params||{});
+  const warning=formatAssetDifferenceWarning(diff);
+  const status=$("status");
+  status.classList.toggle("warning",Boolean(warning));
+  status.textContent=warning ? message+"\n\n"+warning : message;
+}
+
+function applyParamsToScreen(params){
+  const source=(params && typeof params==="object") ? params : {};
+
+  for(const node of getTopLevelParamNodes()){
     const name=node.dataset.nodeName;
 
-    if(
-      params &&
-      typeof params==="object" &&
-      Object.prototype.hasOwnProperty.call(params,name)
-    ){
-      setNodeFromValue(node,params[name]);
+    if(Object.prototype.hasOwnProperty.call(source,name)){
+      setNodeFromValue(node,source[name]);
+    }else{
+      // 保存JSON/履歴/インポートにキーが無い項目は「未指定」。
+      // API定義の default を再適用しない。
+      resetNodeToUnset(node);
     }
   }
 }
@@ -2812,7 +3227,7 @@ async function saveCurrentRequest(){
   let params;
 
   try{
-    params=buildParams();
+    params=buildParams({generateSpecial:false});
   }catch(e){
     $("status").textContent="保存できません: "+e.message;
     return;
@@ -2828,9 +3243,16 @@ async function saveCurrentRequest(){
     savedAt:new Date().toISOString()
   };
 
-  setSavedRequests(saved);
-  refreshSavedRequests(name);
+  const saveResult=setSavedRequests(saved);
 
+  if(!saveResult.ok){
+    $("status").textContent=saveResult.quota
+      ? "保存できません: localStorage の保存容量が不足しています。不要な保存データや実行履歴を削除してください。"
+      : "保存できません: "+saveResult.error;
+    return;
+  }
+
+  refreshSavedRequests(name);
   $("status").textContent="保存しました: "+name;
 }
 
@@ -2863,7 +3285,7 @@ function loadSavedRequest(){
   $("body").value=item.body||"";
   $("saveName").value=name;
 
-  $("status").textContent="読み込みました: "+name;
+  showLoadResult("読み込みました: "+name,item.assetKey,item.params||{});
 }
 
 async function deleteSavedRequest(){
@@ -2894,7 +3316,11 @@ async function deleteSavedRequest(){
   }
 
   delete saved[name];
-  setSavedRequests(saved);
+  const deleteResult=setSavedRequests(saved);
+  if(!deleteResult.ok){
+    $("status").textContent="保存データの削除結果を保存できません: "+deleteResult.error;
+    return;
+  }
   refreshSavedRequests();
 
   if($("saveName").value===name){
@@ -2913,7 +3339,7 @@ function buildSavePayload(name=""){
     version:1,
     name:name || $("saveName").value.trim() || "request",
     assetKey:assetKey,
-    params:buildParams(),
+    params:buildParams({generateSpecial:false}),
     body:$("body").value,
     savedAt:new Date().toISOString()
   };
@@ -3013,9 +3439,11 @@ function applyImportedPayload(payload){
   $("saveName").value=
     payload.name || "";
 
-  $("status").textContent=
-    "ファイルから読み込みました: "+
-    (payload.name || payload.assetKey);
+  showLoadResult(
+    "ファイルから読み込みました: "+(payload.name || payload.assetKey),
+    payload.assetKey,
+    payload.params || {}
+  );
 }
 
 async function importRequestFile(file){
@@ -3052,11 +3480,34 @@ function getHistory(){
 }
 
 function setHistory(items){
-  localStorage.setItem(
-    HISTORY_STORAGE_KEY,
-    JSON.stringify(items.slice(0,HISTORY_LIMIT))
-  );
+  const working=items.slice(0,HISTORY_LIMIT);
+  let trimmed=0;
+
+  while(true){
+    const result=trySetLocalStorage(
+      HISTORY_STORAGE_KEY,
+      JSON.stringify(working)
+    );
+
+    if(result.ok){
+      return {ok:true,trimmed:trimmed,storedCount:working.length};
+    }
+
+    if(!result.quota){
+      return {ok:false,trimmed:trimmed,storedCount:0,error:result.error};
+    }
+
+    if(working.length<=1){
+      // 新しい履歴1件だけでも入らない場合は既存履歴を壊さず保存失敗とする。
+      return {ok:false,trimmed:trimmed,storedCount:0,error:result.error,quota:true};
+    }
+
+    // 容量不足時は最も古い履歴から削除して再試行する。
+    working.pop();
+    trimmed++;
+  }
 }
+
 
 function formatHistoryLabel(item,index){
   const dt=new Date(item.executedAt);
@@ -3097,15 +3548,14 @@ function refreshHistory(){
 
 function addHistory(entry){
   const history=getHistory();
-
   history.unshift(entry);
 
-  setHistory(
-    history.slice(0,HISTORY_LIMIT)
-  );
-
+  const result=setHistory(history);
   refreshHistory();
+
+  return result;
 }
+
 
 function loadHistoryEntry(){
   const index=Number($("historySelect").value);
@@ -3150,11 +3600,11 @@ function loadHistoryEntry(){
   $("response").textContent=
     item.responseText || "";
 
-  $("status").textContent=
-    "履歴を読み込みました: HTTP "+
-    item.status+
-    " / "+
-    item.executedAt;
+  showLoadResult(
+    "履歴を読み込みました: HTTP "+item.status+" / "+item.executedAt,
+    item.assetKey,
+    item.params || {}
+  );
 }
 
 

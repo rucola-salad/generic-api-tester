@@ -1,173 +1,71 @@
 # Generic API Tester
 
-Generic API Tester は、**APIの仕様をJSONファイルに定義するだけで、さまざまなREST APIをブラウザからテストできる汎用APIテストツール**です。
+Generic API Tester は、API仕様を `api-assets.json` に定義してブラウザからREST APIをテストするための軽量ツールです。
+APIごとにHTMLやJavaScriptを書き換えず、URL、HTTPメソッド、送信形式、ヘッダー、パラメータ、入力UIなどをJSONで追加できます。
 
-APIごとにHTMLやJavaScriptを書き換える必要はありません。アクセス先URL、HTTPメソッド、送信形式、ヘッダー、パラメータなどを `api-assets.json` に定義すると、その内容に合わせて入力画面を構成します。
-
-GETのクエリパラメータ、POSTのJSON・フォーム送信、オブジェクトや配列を含むネストしたデータに対応しています。UUIDや日時のようにリクエストごとに変わる値も `special` で自動生成できます。
-
-API実行時には実際の送信URLやBodyを「送信内容」として表示し、その内容でAPIを実行します。レスポンスの表示、直近10件の実行履歴、名前付き保存、JSONファイルへの保存・読込など、繰り返しAPIを確認するための機能も備えています。
-
-ブラウザから対象APIへ直接アクセスするのではなく、同梱のPythonローカルプロキシを経由します。これにより、ブラウザ側のCORS制約を避けながら、許可したAPIホストだけへアクセスできます。
+ブラウザからのAPI呼び出しは同梱のPythonローカルプロキシを経由します。CORSの影響を避けつつ、`server-config.json` で許可したホストだけへアクセスできます。
 
 ## 主な機能
 
-- JSONファイルによるAPI定義
-- GET / POST等のHTTPメソッド
-- クエリパラメータ
-- JSON送信
-- フォーム送信
-- オブジェクト・配列のネスト
-- 配列要素の追加・削除
-- UUID v4の自動生成（ハイフンあり / なし）
-- 日時の自動生成（任意フォーマット、Local / UTC）
-- 送信内容のプレビュー
-- API実行時の送信内容自動生成
-- 送信内容・レスポンスのクリップボードコピー
-- 名前付き保存・読込
-- JSONファイルへの保存・読込
+- JSONによるAPI定義
+- GET / POSTなどのHTTPメソッド
+- Query / JSON / Form / Multipart / Binary / XML送信
+- オブジェクト・配列を含むネストパラメータ
+- `string` / `number` / `boolean` / `file` の型指定
+- `required` / `nullable` / `default`
+- テキスト、リストボックス（`select`）、ラジオボタン（`radio`）入力
+- Booleanの3状態入力（未指定 / true / false）
+- UUID・日時などの `special` 自動生成
+- `special.regenerate` による再生成タイミング制御
+- Base64 / Quoted-Printableエンコード
+- Bearer Token / API Key認証
+- 送信内容のプレビューとコピー
+- レスポンス表示とコピー
+- 名前付き保存・JSONファイル保存
 - 直近10件の実行履歴
+- localStorage容量不足時の履歴自動調整
 - READMEの画面内表示
-- Pythonローカルプロキシ
-- APIアクセス先の許可リスト
 
 ## 動作環境
 
-### 必須環境
+- Windows 10 / 11
+- Python 3
+- Google Chrome / Microsoft Edgeなどのモダンブラウザ
 
-基本的な動作対象は次の環境です。
+Python側は標準ライブラリのみを使用し、フロントエンドもjQueryなどの外部JavaScriptライブラリには依存しません。
 
-- **OS:** Windows 10 / Windows 11
-- **Python:** Python 3
-- **ブラウザ:** Google Chrome / Microsoft Edge 等のモダンブラウザ
-- **JavaScript:** ブラウザ標準JavaScriptを使用
-- **Python外部パッケージ:** 原則不要
+## セットアップと起動
 
-Python側は標準ライブラリを使用する構成です。`pip install` による追加パッケージの導入を前提としていません。
+1. ZIPを任意のフォルダへ展開します。
+2. `start-server.bat` をダブルクリックします。
+3. ブラウザで Generic API Tester が開きます。
 
-フロントエンドもjQuery等の外部JavaScriptライブラリには依存していません。
-
-### ネットワーク
-
-Generic API Testerを実行するPCから、テスト対象APIへネットワーク接続できる必要があります。
-
-インターネット上のAPIをテストする場合はインターネット接続が必要です。同梱サンプルの公開テストAPIを利用する場合も同様です。
-
-社内APIをテストする場合は、そのAPIへ到達できる社内ネットワーク、VPN等の接続環境が必要になる場合があります。
-
-### APIアクセス先の制限
-
-ローカルプロキシからアクセスできるAPIホストは `test-server.py` の `ALLOWED_HOSTS` で制限しています。
-
-新しいAPIをテストする場合は、必要に応じて対象ホストを `ALLOWED_HOSTS` に追加してください。
-
-この制限は、Generic API Testerを意図しない任意URLへの中継プロキシとして利用されることを防ぐためのものです。
-
-### ブラウザの保存領域
-
-次の機能ではブラウザの `localStorage` を使用します。
-
-- 名前付き保存
-- 直近10件の実行履歴
-
-ブラウザのサイトデータを削除すると、これらの保存内容も削除される場合があります。
-
-JSONファイルへの「ファイル保存・ファイル読込」は `localStorage` とは独立しているため、バックアップや別PCへの移行にも利用できます。
-
-## セットアップ
-
-1. Generic API Tester一式を任意のフォルダへ展開します。
-2. Python 3が利用できることを確認します。
-3. テスト対象APIのホストが `test-server.py` の `ALLOWED_HOSTS` に登録されていることを確認します。
-4. 必要に応じて `html/assets/api-assets.json` にAPI定義を追加します。
-
-Pythonの確認例:
+通常は次のURLで起動します。
 
 ```text
-python --version
+http://127.0.0.1:8000/
 ```
 
-環境によっては次のコマンドの場合があります。
+`api-tester.html` を `file://` で直接開かないでください。APIプロキシやREADME読込など、ローカルサーバーを前提とする機能があります。
 
-```text
-py --version
-```
+## 基本的な使い方
 
-## 起動方法
+1. 「API定義」でテストするAPIを選択します。
+2. 必要なパラメータを入力します。
+3. 「送信内容を生成」で実際に送るURLやBodyを確認します。
+4. 「API実行」でリクエストを送信します。
+5. 「レスポンス」でHTTPステータスと応答内容を確認します。
 
-Windowsでは `start-server.bat` を実行します。
-
-```text
-start-server.bat
-```
-
-ローカルHTTPサーバーが起動し、ブラウザでGeneric API Testerを開きます。
-
-HTMLファイルを `file://` で直接開くのではなく、必ずローカルHTTPサーバー経由で利用してください。API定義ファイルの読み込みやプロキシ通信を正しく行うためです。
-
-終了する場合は、サーバーを実行しているコマンドプロンプトを終了します。
-
-## クイックスタート
-
-### 1. 起動する
-
-`start-server.bat` を実行し、ブラウザでGeneric API Testerを開きます。
-
-### 2. API定義を選択する
-
-画面上部の **API定義** プルダウンから、テストするAPIを選択します。
-
-`api-assets.json` を変更した場合は **定義再読込** を押します。
-
-### 3. パラメータを入力する
-
-表示されたパラメータ欄へ値を入力します。
-
-オブジェクトや配列が定義されている場合も、定義内容に応じて入力欄が生成されます。
-
-### 4. 送信内容を確認する
-
-**送信内容を生成** を押すと、APIを実行せずに送信予定のURLやBodyを確認できます。
-
-UUIDや日時などの `special` 値も、このタイミングで生成されます。
-
-### 5. APIを実行する
-
-**API実行** を押します。
-
-API実行時にも送信内容を必ず生成し、画面に表示した内容と同じ内容を送信します。
-
-```text
-入力値
-  ↓
-送信内容生成
-  ↓
-送信内容を画面表示
-  ↓
-ローカルプロキシ
-  ↓
-対象API
-  ↓
-レスポンス表示
-  ↓
-実行履歴へ保存
-```
-
-### 6. 必要に応じて保存する
-
-繰り返し使用する入力値は名前付き保存できます。
-
-保存名を指定しない場合は一意な名前を自動生成します。同じ保存名が存在する場合は上書き確認を表示します。
-
-別PCへの移行やバックアップには **ファイル保存 / ファイル読込** を利用できます。
+必要に応じて、現在の入力内容を名前付き保存したり、JSONファイルへ書き出したりできます。
 
 ## ファイル構成
 
 ```text
 generic-api-tester/
+├─ README.md
 ├─ LICENSE
 ├─ NOTICE
-├─ README.md
+├─ .gitignore
 ├─ start-server.bat
 ├─ test-server.py
 ├─ server-config.json
@@ -177,313 +75,184 @@ generic-api-tester/
       └─ api-assets.json
 ```
 
-主な役割:
+| ファイル | 用途 |
+|---|---|
+| `html/api-tester.html` | API Tester本体 |
+| `html/assets/api-assets.json` | API定義 |
+| `test-server.py` | ローカルHTTPサーバー / APIプロキシ |
+| `server-config.json` | サーバー・プロキシ設定 |
+| `start-server.bat` | Windows起動用 |
 
-- `README.md` — 使用方法・API定義方法
-- `LICENSE` — Apache License 2.0本文
-- `NOTICE` — 著作権表示
-- `start-server.bat` — Windows用起動スクリプト
-- `test-server.py` — ローカルHTTPサーバー兼APIプロキシ
-- `api-tester.html` — Generic API Tester本体
-- `api-assets.json` — APIごとの定義
+## API定義
 
-## 基本的な考え方
-
-API固有の違いは、できるだけプログラム本体ではなく `api-assets.json` に記述します。
-
-```text
-api-assets.json
-      ↓
-API定義読込
-      ↓
-入力画面生成
-      ↓
-送信内容生成
-      ↓
-API実行
-      ↓
-レスポンス・履歴
-```
-
-新しいAPIを追加する場合は、原則として `api-assets.json` に定義を追加します。
-
-
-## 送信内容の保存・読み込み
-
-画面上部の **保存名 / 保存 / 読込 / 削除** を使って、入力中のリクエストをブラウザへ名前付き保存できます。
-
-保存対象:
-
-- 選択中のAPI定義
-- 現在入力されているパラメータ
-- ネストしたオブジェクト
-- 配列の要素数と各要素の値
-- 送信内容欄
-
-保存先はブラウザの `localStorage` です。ブラウザを終了しても保存内容は残ります。
-
-### 保存
-
-1. API定義を選択します。
-2. パラメータを入力します。
-3. `保存名` を入力します。
-4. **保存** を押します。
-
-同名で保存した場合は上書きします。
-
-### 読み込み
-
-保存データを選択して **読込** を押します。保存時のAPI定義を選択し、ネストや配列を含む入力状態を復元します。
-
-### 削除
-
-保存データを選択して **削除** を押します。
-
-### 保存場所
-
-`localStorage` はブラウザプロファイル単位です。
-
-- 別PCには自動共有されません。
-- 別ブラウザには自動共有されません。
-- サイトデータを削除すると保存内容も削除されます。
-
-
-## ファイル保存・ファイル読込
-
-`localStorage` の保存とは別に、現在の入力状態をJSONファイルとして保存できます。
-
-画面上部の次のボタンを使用します。
-
-- **ファイル保存**
-- **ファイル読込**
-
-### ファイル保存
-
-**ファイル保存** を押すと、現在の入力状態を `.json` ファイルとしてブラウザから保存します。
-
-保存内容:
-
-- API定義キー
-- 現在の入力パラメータ
-- ネストしたオブジェクト
-- 配列要素とその値
-- 送信内容欄
-- 保存名
-- 保存日時
-- 保存ファイル形式のバージョン
-
-保存ファイル例:
+APIは `html/assets/api-assets.json` に定義します。
 
 ```json
 {
-  "format": "generic-api-tester-request",
-  "version": 1,
-  "name": "月次請求検索",
-  "assetKey": "invoice-search",
-  "params": {
-    "Condition": {
-      "CustomerCode": "C000123",
-      "Statuses": [
-        "UNPAID",
-        "OVERDUE"
-      ]
-    }
-  },
-  "body": "",
-  "savedAt": "2026-08-27T05:00:00.000Z"
+  "employee-search": {
+    "label": "社員検索",
+    "method": "POST",
+    "paramLocation": "body",
+    "bodyType": "json",
+    "serialization": "native",
+    "url": "https://example.com/api/employees",
+    "headers": {
+      "Accept": "application/json"
+    },
+    "params": []
+  }
 }
 ```
 
-### ファイル読込
+### 基本パラメータ
 
-**ファイル読込** を押して、以前保存した `.json` ファイルを選択します。
-
-読込時には次を復元します。
-
-- API定義
-- オブジェクトのネスト
-- 配列の要素数
-- 各パラメータ値
-- 送信内容欄
-- 保存名
-
-保存ファイル内の `assetKey` が現在の `api-assets.json` に存在しない場合は読み込みエラーになります。
-
-### localStorageとの使い分け
-
-`localStorage`:
-
-- 同じPC・同じブラウザで繰り返し使う一時保存に向いています。
-- 操作が速く、ファイル管理が不要です。
-
-JSONファイル:
-
-- バックアップ
-- 別PCへの移行
-- 他メンバーとの共有
-- テストケースの保管
-
-に向いています。
-
-
-## 実行履歴
-
-APIを実行するたびに、直近 **10件** の送信内容とレスポンスをブラウザの `localStorage` に自動保存します。
-
-保存される内容:
-
-- API定義キー
-- URL
-- HTTPメソッド
-- HTTPヘッダー
-- 入力パラメータ
-- ネストしたオブジェクト
-- 配列要素
-- 送信内容
-- HTTPステータス
-- レスポンス
-- 処理時間
-- 実行日時
-
-画面上部の **実行履歴を選択** から履歴を選び、**履歴読込** を押すと、その時点の入力内容とレスポンスを復元できます。
-
-履歴は新しいものから順に保持し、11件目が追加されると最も古い履歴を自動削除します。
-
-**履歴削除** を押すと、保存されている実行履歴をすべて削除します。
-
-実行履歴は名前付き保存とは別管理です。
-
-- 名前付き保存: 明示的に残したいテストケース向け
-- 実行履歴: 直近の実行を自動的に振り返る用途
-
-
-## 同梱サンプルAPI
-
-同梱の `api-assets.json` は、特定の業務システムやカードAPIに依存しない公開テストAPIを使っています。
-
-- `jsonplaceholder.typicode.com`
-  - GETの一覧取得
-  - クエリパラメータ付き検索
-  - JSON POSTのサンプル
-- `httpbin.org`
-  - ネストJSONの送信確認
-  - `application/x-www-form-urlencoded` の送信確認
-
-これらはテスト用の公開サービスです。本番用途ではなく、汎用APIテスターの動作確認用として利用します。
-
-
-## 保存名の自動生成
-
-名前付き保存で `保存名` が空欄のまま **保存** を押した場合、自動的に一意な保存名を生成します。
-
-例:
-
-```text
-request_20260827_155501
-request_20260827_155501_2
+```json
+{
+  "name": "EmployeeCode",
+  "label": "社員コード",
+  "type": "value",
+  "valueType": "string",
+  "required": true,
+  "nullable": false,
+  "default": "E00125",
+  "placeholder": "例: E00125"
+}
 ```
 
-基本は実行時刻を `YYYYMMDD_HHMMSS` 形式で使用し、同名が既に存在する場合は `_2`, `_3` のように連番を付けます。
+| 項目 | 意味 |
+|---|---|
+| `name` | APIへ送信するパラメータ名 |
+| `label` | 画面表示名 |
+| `type` | `value` / `object` / `array` |
+| `valueType` | `string` / `number` / `boolean` / `file` |
+| `required` | パラメータを必須とするか |
+| `nullable` | 必須パラメータで `null` を許容するか |
+| `default` | 初期値 |
+| `placeholder` | 入力欄の補助表示 |
+| `enabled` | `false` の場合は入力・送信対象外 |
 
-自動生成された保存名は画面の `保存名` 欄にも反映されます。
+`value` は従来定義との互換用として利用できます。新しい定義では `default` の利用を推奨します。
 
+### required / nullable
 
-## 履歴の削除
+未入力・未選択時は次のように扱います。
 
-実行履歴の削除操作は2種類あります。
+| required | nullable | 動作 |
+|---|---|---|
+| `false` | `false` | パラメータを送信しない |
+| `false` | `true` | パラメータを送信しない |
+| `true` | `false` | 入力エラー |
+| `true` | `true` | `null` を送信 |
 
-- **履歴1件削除**
-  - 履歴一覧で選択している1件だけを削除します。
-- **履歴全削除**
-  - 保存されている直近10件の実行履歴をすべて削除します。
+`required` は「項目を送信する必要がある」、`nullable` は「その値としてnullを許す」という意味です。
 
-名前付き保存データは実行履歴とは別管理のため、履歴を削除しても名前付き保存には影響しません。
+### オブジェクト
 
-
-## 同名保存時の確認
-
-`保存名` に既存の名前を指定して **保存** を押した場合、上書き確認のポップアップを表示します。
-
-- **OK**: 既存の保存データを上書きします。
-- **キャンセル**: 保存処理を中止します。
-
-保存名が空欄で自動生成された場合は、一意な名前が採番されるため上書き確認は表示しません。
-
-
-## 確認ポップアップ
-
-上書きや削除操作では、ブラウザ標準の `confirm()` ではなく、README表示と同系統のモーダルダイアログを使用します。
-
-確認モーダルを表示する操作:
-
-- 同名保存の上書き
-- 名前付き保存データの削除
-
-
-モーダル外クリックまたは `Esc` キーでキャンセルできます。
-
-
-## API実行時の送信内容生成
-
-**API実行** を押した場合は、事前に **送信内容を生成** を押していなくても、実行直前に必ず送信内容を生成します。
-
-処理順:
-
-```text
-入力パラメータ取得
-↓
-送信URL / Body生成
-↓
-送信内容欄へ表示
-↓
-同じ内容でAPI実行
-↓
-同じ送信内容を実行履歴へ保存
+```json
+{
+  "name": "Applicant",
+  "label": "申請者",
+  "type": "object",
+  "children": [
+    {
+      "name": "EmployeeId",
+      "label": "社員番号",
+      "type": "value",
+      "valueType": "string"
+    }
+  ]
+}
 ```
 
-そのため、プレビュー操作の有無にかかわらず、履歴には実際に送信した内容が保存されます。
+### 配列
 
-**送信内容を生成** ボタンは、APIを実行せずに送信内容だけ確認したい場合のプレビュー用です。
+```json
+{
+  "name": "Approvers",
+  "label": "承認者",
+  "type": "array",
+  "initialItems": 1,
+  "item": {
+    "type": "object",
+    "children": [
+      {
+        "name": "EmployeeId",
+        "label": "社員番号",
+        "type": "value",
+        "valueType": "string"
+      }
+    ]
+  }
+}
+```
 
+配列要素は画面から追加・削除できます。
 
-## 履歴削除時の確認
+## 入力UI `inputType`
 
-実行履歴は一時的な自動保存データとして扱うため、**履歴1件削除** と **履歴全削除** では確認モーダルを表示せず、そのまま削除します。
+`valueType` は送信するデータ型、`inputType` は画面上の入力方法を表します。
 
-名前付き保存データの削除と同名保存の上書きについては、引き続き確認モーダルを表示します。
+### リストボックス
 
+```json
+{
+  "name": "Department",
+  "label": "部署",
+  "type": "value",
+  "valueType": "string",
+  "inputType": "select",
+  "default": "SALES",
+  "options": [
+    { "value": "SALES", "label": "営業部" },
+    { "value": "DEV", "label": "開発部" },
+    { "value": "ADMIN", "label": "管理部" }
+  ]
+}
+```
 
-## 履歴削除の確認ルール
+画面には `label` を表示し、APIには `value` を送信します。
 
-履歴削除は次の挙動です。
+### ラジオボタン
 
-- **履歴1件削除**: 確認モーダルなしで即時削除
-- **履歴全削除**: 確認モーダルを表示してから削除
+```json
+{
+  "name": "EmploymentType",
+  "label": "雇用区分",
+  "type": "value",
+  "valueType": "string",
+  "inputType": "radio",
+  "required": true,
+  "nullable": true,
+  "options": [
+    { "value": "REGULAR", "label": "正社員" },
+    { "value": "CONTRACT", "label": "契約社員" }
+  ]
+}
+```
 
-名前付き保存データの削除と同名保存の上書きについても、引き続き確認モーダルを表示します。
+`default` がなければ、radioは初期状態で未選択にできます。上記のように `required: true` / `nullable: true` なら、未選択時はパラメータを省略せず `null` を送信します。
 
+未指定を選択肢として明示したい場合は、`options` に未指定用の選択肢を定義できます。
 
-## 実行履歴プルダウンの初期表示
+### Boolean
 
-実行履歴が0件の場合でも、プルダウンには初期状態として **実行履歴を選択** と表示します。
+`valueType: "boolean"` は3状態チェックボックスで表示します。
 
-起動時に履歴一覧を初期化し、API定義の読み込み完了後にも再生成するため、保存済み履歴がある場合はAPI定義の表示名を使って履歴を表示します。
+```text
+未指定 → true → false → 未指定
+```
 
+- 未指定: optionalならパラメータを送信しない
+- true: JSON Boolean `true`
+- false: JSON Boolean `false`
 
-## パラメータ欄の固定高さ
-
-パラメータ欄は `250px` の固定高さです。
-
-パラメータ数、オブジェクトのネスト、配列要素が増えてもタイル全体は縦に伸び続けず、パラメータ欄の内部でスクロールします。
-
+連続するトップレベルBooleanは、データ構造を変えず画面上だけ同行表示します。オブジェクト内では `layout: "inline"` も使用できます。
 
 ## 特殊値 `special`
 
-`type: "value"` のパラメータには `special` を指定できます。特殊値は **送信内容を生成** または **API実行** を押した時点で生成され、入力欄にも反映されます。
+UUIDや日時など、固定入力ではなく自動生成する値を定義できます。
 
 ### UUID
-
-標準UUID v4:
 
 ```json
 {
@@ -491,35 +260,12 @@ request_20260827_155501_2
   "label": "リクエストID",
   "type": "value",
   "special": "uuid",
-  "format": "default"
+  "format": "default",
+  "regenerate": "eachRequest"
 }
 ```
 
-生成例:
-
-```text
-8e2d90a7-17e4-4af8-bc31-63dfe12b57e1
-```
-
-ハイフンなし:
-
-```json
-{
-  "name": "TraceId",
-  "label": "トレースID",
-  "type": "value",
-  "special": "uuid",
-  "format": "compact"
-}
-```
-
-生成例:
-
-```text
-8e2d90a717e44af8bc3163dfe12b57e1
-```
-
-UUIDの `format` は `default` と `compact` に対応します。
+UUIDの `format` は `default` / `compact` / `braces` / `urn` / `upper` を指定できます。
 
 ### 日時
 
@@ -530,301 +276,28 @@ UUIDの `format` は `default` と `compact` に対応します。
   "type": "value",
   "special": "datetime",
   "format": "yyyy-MM-dd HH:mm:ss.SSS",
-  "timezone": "local"
+  "timezone": "local",
+  "regenerate": "eachRequest"
 }
 ```
-
-対応フォーマット:
-
-| 記号 | 内容 |
-| --- | --- |
-| `yyyy` | 4桁年 |
-| `MM` | 月 |
-| `dd` | 日 |
-| `HH` | 時（24時間） |
-| `mm` | 分 |
-| `ss` | 秒 |
-| `SSS` | ミリ秒 |
 
 `timezone` は `local` または `utc` を指定できます。
 
-UTCの例:
+### regenerate
 
-```json
-{
-  "name": "RequestDateTime",
-  "label": "UTC日時",
-  "type": "value",
-  "special": "datetime",
-  "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-  "timezone": "utc"
-}
-```
+| 値 | 動作 |
+|---|---|
+| `ifEmpty` | 値が空の場合だけ生成。省略時の既定動作 |
+| `eachRequest` | リクエスト単位で新しい値を生成 |
+| `manual` | 「再生成」を行った場合だけ生成し直す |
 
-`'T'` や `'Z'` のようにシングルクォートで囲んだ文字は固定文字として出力します。
+`eachRequest` では、パラメータ欄に実際のUUIDや日時を固定表示せず、自動生成されることが分かる表示にします。
 
-特殊値はAPI実行直前にも生成するため、事前に **送信内容を生成** を押していなくても、実際に生成されたUUID・日時が送信内容と実行履歴に保存されます。
+「送信内容を生成」を押すと値を生成して内部保持し、送信内容には実値を表示します。そのまま「API実行」を押した場合は、確認したものと同じ値を送信します。API実行後は内部値を破棄し、次のリクエストでは新しい値を生成します。
 
+「送信内容を生成」をもう一度押した場合も、新しい `eachRequest` 値を生成します。履歴を読み込んだ場合、過去に送信した実値は履歴の送信内容として確認できますが、次回リクエスト用の値としては復元しません。
 
-## License
-
-Generic API Tester is licensed under the **Apache License 2.0**.
-
-Copyright 2026 rucola-salad
-
-See `LICENSE` for the full Apache License 2.0 text and `NOTICE` for attribution information.
-
-
-## READMEモーダルのMarkdownテーブル
-
-画面上部の **README** ボタンで表示するモーダルは、次の形式のMarkdownテーブルをHTMLの表として表示します。
-
-```markdown
-| 項目 | 内容 |
-| --- | --- |
-| OS | Windows 10 / 11 |
-| Python | Python 3 |
-```
-
-
-## 画面レイアウト
-
-通常表示では、入力と結果確認を優先して次の構成にしています。
-
-```text
-┌─────────────────────────────────────┐
-│ パラメータ                    250px │
-├─────────────────────────────────────┤
-│ ▶ リクエスト    ▶ HTTPヘッダー      │
-├──────────────────┬──────────────────┤
-│ 送信内容          │ レスポンス        │
-│                  │                  │
-└──────────────────┴──────────────────┘
-```
-
-**リクエスト** と **HTTPヘッダー** は初期状態では折りたたまれています。必要な場合だけ展開できます。
-
-折りたたんだ状態では余白を残さず、送信内容とレスポンスを左右に並べて広く表示します。画面幅が狭い場合は自動的に1列表示へ切り替わります。
-
-
-## パラメータ欄の高さ
-
-パラメータ欄の高さは、API定義に応じて自動的に切り替わります。
-
-- パラメータあり: 内容に必要な高さだけ使用し、最大 `250px` で内部スクロール
-- パラメータなし: 最小高さで `（なし）` のみ表示
-
-パラメータがないAPIでは不要な余白を使わず、送信内容・レスポンスなどの表示領域を優先します。
-
-
-パラメータが少ない場合は250pxまで領域を確保せず、入力項目の高さに合わせて自動的に縮みます。また、パラメータ間の余白もコンパクトにしています。
-
-
-## `special` の生成ルール
-
-`special` を指定したパラメータは通常入力ではなく、自動生成値として扱います。
-
-- `special: "uuid"`: UUIDを自動生成
-- `special: "datetime"`: 日時を自動生成
-
-画面上の入力欄は **readonly** です。ユーザーが直接編集する代わりに **再生成** ボタンを使用します。
-
-### 未設定の場合
-
-値が空の場合は、**送信内容を生成** または **API実行** のタイミングで自動生成します。
-
-### 読み込んだ場合
-
-名前付き保存、実行履歴、JSONファイルから `special` パラメータの値を読み込んだ場合は、その値をそのまま使用します。
-
-API実行時に自動で上書きしません。
-
-### 再生成
-
-新しいUUIDや日時が必要な場合は、そのパラメータの **再生成** ボタンを押します。
-
-```text
-初期状態
-UUID: [ UUIDを自動生成 ] [再生成]
-
-      ↓ 送信内容を生成
-
-UUID: [550e8400-e29b-41d4-a716-446655440000] [再生成]
-
-      ↓ 保存・履歴読込
-
-UUID: [550e8400-e29b-41d4-a716-446655440000] [再生成]
-
-      ↓ API実行
-
-読み込んだUUIDをそのまま送信
-```
-
-これにより、保存したテストケースや過去の実行履歴を再現するときに、当時使用したUUID・日時を保持できます。
-
-
-## UUID自動生成の補足
-
-`special: "uuid"` の値は、送信内容生成・API実行・パラメータ組み立てのいずれの場合でも、値が空なら自動生成されます。
-
-画面ノードには `special` / `format` / `timezone` の定義情報を保持し、保存・履歴・ファイルから値が読み込まれている場合はその値を維持します。
-
-
-## UUID生成処理の実装
-
-`special` の情報は、生成対象となる入力欄自身の `data-special` / `data-special-format` / `data-special-timezone` に保持します。
-
-これにより、親ノードの構造に依存せず、`送信内容を生成`・`API実行`・`再生成` のいずれからでも同じ入力欄へ確実に特殊値を設定します。
-
-
-## コンパクトレイアウト
-
-画面上部は、パラメータ入力と送信内容確認を横並びにしています。
-
-```text
-┌──────────────────┬────────────────────────┐
-│ パラメータ        │ 送信内容                │
-│ コンパクト表示    │                        │
-├──────────────────┴────────────────────────┤
-│ ▶ リクエスト      ▶ HTTPヘッダー            │
-├───────────────────────────────────────────┤
-│ レスポンス                                  │
-└───────────────────────────────────────────┘
-```
-
-パラメータ欄は余白を詰め、最大高さも抑えています。`special` の再生成ボタンは改行しないよう固定幅で表示します。
-
-画面幅が狭い場合は自動的に1列表示へ切り替わります。
-
-
-## 2カラム画面レイアウト
-
-デスクトップでは、画面を「入力・設定」と「通信内容」に分けた2カラム構成です。
-
-```text
-┌──────────────────┬──────────────────────────┐
-│ パラメータ        │ 送信内容                  │
-├──────────────────┤                          │
-│ ▶ リクエスト      ├──────────────────────────┤
-├──────────────────┤ レスポンス                │
-│ ▶ HTTPヘッダー    │                          │
-└──────────────────┴──────────────────────────┘
-```
-
-- 左列（約40%）: パラメータ、リクエスト、HTTPヘッダー
-- 右列（約60%）: 送信内容、レスポンス
-- リクエストとHTTPヘッダーは初期状態で折りたたみ
-- 画面幅が狭い場合は1カラムへ自動切替
-
-
-### 初期表示
-
-- リクエスト欄は折りたたみ可能ですが、初期状態では展開して表示します。
-- HTTPヘッダー欄は初期状態では折りたたみます。
-- 送信内容欄は縦方向をコンパクトにし、レスポンス表示領域を広く確保します。
-
-
-## 型・必須・null・デフォルト値
-
-`type: "value"` では `valueType`、`required`、`nullable`、`default` を指定できます。
-
-```json
-{
-  "name": "EmployeeCode",
-  "label": "社員コード",
-  "type": "value",
-  "valueType": "string",
-  "required": true,
-  "nullable": false,
-  "default": "E00125"
-}
-```
-
-| 属性 | 内容 |
-| --- | --- |
-| `type` | 構造。`value` / `object` / `array` |
-| `valueType` | 値型。`string` / `number` / `boolean` |
-| `required` | 必須かどうか |
-| `nullable` | 必須かつ未指定の場合に `null` を許可するか |
-| `default` | 初期値 |
-| `special` | UUID・日時などの自動生成 |
-
-`valueType` がない既存定義は、後方互換のため従来の自動型判定を使用します。
-
-空欄時は、任意項目ならパラメータを省略、必須かつ `nullable: false` なら入力エラー、必須かつ `nullable: true` なら `null` を送信します。
-
-### Boolean
-
-Booleanは3状態チェックボックスです。
-
-```text
-[-] 未指定 → [✓] true → [ ] false → [-] 未指定
-```
-
-`default: true` / `default: false` で初期値を指定できます。`default` がなければ未指定で開始します。任意項目の未指定はパラメータを省略し、必須項目の未指定は `nullable` の指定に従います。
-
-### Booleanを同行表示
-
-親オブジェクトへ `layout: "inline"` を指定すると、子項目を同行に並べられます。
-
-```json
-{
-  "name": "Conditions",
-  "label": "状態条件",
-  "type": "object",
-  "layout": "inline",
-  "children": [
-    {
-      "name": "Active",
-      "label": "有効",
-      "type": "value",
-      "valueType": "boolean",
-      "required": false,
-      "default": true
-    },
-    {
-      "name": "Deleted",
-      "label": "削除済み",
-      "type": "value",
-      "valueType": "boolean",
-      "required": false
-    }
-  ]
-}
-```
-
-横幅が不足した場合は自動的に折り返します。保存・履歴・ファイルから読み込んだ値は `default` より優先して復元します。
-
-
-## Booleanチェックボックス表示
-
-`valueType: "boolean"` の項目はチェックボックスとして表示します。
-
-```json
-{
-  "name": "Active",
-  "label": "有効",
-  "type": "value",
-  "valueType": "boolean",
-  "required": false
-}
-```
-
-チェックボックスは `未指定 → true → false → 未指定` の3状態を循環します。ブラウザの共通 `input` スタイルに埋もれないよう、Boolean用の表示スタイルを個別に適用しています。
-
-
-## Boolean 3状態の切替
-
-Booleanの状態はブラウザ標準のcheckbox切替に依存せず、内部状態として明示的に管理します。
-
-```text
-未指定 → true → false → 未指定
-```
-
-クリックまたはキーボードのSpace / Enterで次の状態へ遷移します。これにより、`indeterminate` を含む3状態をブラウザ差異の影響を受けにくい形で扱います。
-
-
-## ファイル・Quoted-Printable・XML
+## ファイル・エンコード・XML
 
 ### ファイル
 
@@ -834,45 +307,34 @@ Booleanの状態はブラウザ標準のcheckbox切替に依存せず、内部�
   "label": "添付ファイル",
   "type": "value",
   "valueType": "file",
-  "accept": ".pdf,.txt,image/*",
-  "multiple": false
+  "required": true,
+  "accept": ".pdf,.txt,image/*"
 }
 ```
 
-`accept: "image/*"` で画像、`accept: "video/*"` で動画を選択できます。
+`multiple: true` で複数ファイルを選択できます。
 
 ### bodyType
 
-| bodyType | 用途 |
-| --- | --- |
-| `none` | Bodyなし |
-| `json` | JSON |
-| `form` | application/x-www-form-urlencoded |
-| `multipart` | multipart/form-data |
-| `binary` | Body全体をファイル/バイナリとして送信 |
-| `xml` | XML |
-| `raw` | 生データ |
+主な送信形式は次のとおりです。
+
+- `none`
+- `json`
+- `form`
+- `multipart`
+- `binary`
+- `xml`
+- `raw`
+
+`multipart` では `FormData` を使用し、multipart boundaryはブラウザが設定します。
 
 ### encoding
 
-| encoding | 内容 |
-| --- | --- |
-| `none` | 変換なし |
-| `base64` | Base64 |
-| `quoted-printable` | Quoted-Printable |
+ファイルや文字列には必要に応じて次のエンコードを指定できます。
 
-文字列にも `encoding` を指定できます。
-
-```json
-{
-  "name": "message",
-  "type": "value",
-  "valueType": "string",
-  "encoding": "quoted-printable"
-}
-```
-
-ファイルをJSON/XMLへ埋め込む場合は `base64` または `quoted-printable` を指定します。
+- `none`
+- `base64`
+- `quoted-printable`
 
 ### XML
 
@@ -886,21 +348,11 @@ Booleanの状態はブラウザ標準のcheckbox切替に依存せず、内部�
 }
 ```
 
-`type: "object"` はネストしたXML要素、`type: "array"` は同名要素の繰り返しとして生成します。
+オブジェクトはネスト要素、配列は同名要素の繰り返しとしてXMLを生成します。
 
-生成例:
+## 認証
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<request>
-  <Employee>
-    <EmployeeId>E00125</EmployeeId>
-    <Active>true</Active>
-  </Employee>
-</request>
-```
-
-### 認証
+認証情報は `api-assets.json` に直接書かず、画面から入力します。
 
 Bearer Token:
 
@@ -924,73 +376,35 @@ API Key:
 }
 ```
 
-認証値は `api-assets.json` へ直接書かず、画面から入力します。
+`in` には `header` または `query` を指定できます。
 
+## 保存・読込
 
-## Booleanクリック操作
+### 名前付き保存
 
-Booleanの3状態チェックボックスは、チェックボックス本体・ラベル部分のどちらをクリックしても同じ動作をします。
+現在のAPI定義と入力内容をブラウザの `localStorage` に保存します。保存名を空にした場合はAPI名と日時から自動生成します。同名保存時は確認ダイアログを表示します。
 
-```text
-未指定 → true → false → 未指定
-```
+### JSONファイル
 
-チェックボックス本体の標準トグルと独自3状態処理が二重に動かないよう、イベント処理を分離しています。
+「ファイル保存」で現在の内容をJSONファイルへ書き出し、「ファイル読込」で復元できます。ブラウザのサイトデータとは独立しているため、バックアップや別PCへの移行にも利用できます。
 
+### 実行履歴
 
-## Booleanチェック状態の表示
+API実行時に直近10件を保存します。履歴にはAPI定義、入力値、実際の送信内容、レスポンス、HTTPステータス、実行日時などを保持します。
 
-Booleanチェックボックス本体は表示専用とし、クリック操作はBooleanコントロール全体で処理します。
+個別履歴は確認なしで削除でき、全履歴削除時は確認ダイアログを表示します。
 
-これにより、ブラウザ標準のcheckbox切替と3状態ロジックが競合せず、次の状態が見た目にも正しく反映されます。
+### localStorage容量不足
 
-```text
-[-] 未指定 → [✓] true → [ ] false → [-] 未指定
-```
+`localStorage` の容量上限に達しても、既存の保存データや履歴の読み込みは継続できるようにしています。
 
+実行履歴の保存で容量不足になった場合は、古い履歴から削除して再試行します。それでも保存できない場合は容量不足として通知します。履歴保存の失敗をAPI通信そのものの失敗としては扱いません。
 
-## Boolean同行表示の折り返し
-
-`layout: "inline"` のBoolean項目は、各項目を内容幅で横並びにし、横幅が不足した場合だけ次の行へ折り返します。
-
-```text
-[✓] 有効 true    [-] 削除済み 未指定    [ ] ロック false
-
-↓ 幅が不足した場合
-
-[✓] 有効 true    [-] 削除済み 未指定
-[ ] ロック false
-```
-
-各Boolean項目が列幅いっぱいに広がらないよう、`flex: 0 0 auto` と `width: auto` を使用しています。
-
-
-## トップレベルBooleanの同行表示
-
-APIのJSON構造を変えずに、トップレベルへ連続して定義されたBooleanパラメータも自動的に横並び表示します。
-
-例えば次の定義はJSON上ではすべてトップレベルです。
-
-```json
-{
-  "name": "PreferNormalImage",
-  "type": "value",
-  "valueType": "boolean"
-}
-```
-
-```text
-[✓] 通常版画像を優先 true
-[✓] 最新セットを優先 true
-[✓] 別名検索を許可 true
-```
-
-画面では可能な限り同行に並べ、横幅が不足した場合だけ次行へ折り返します。送信JSONの階層は変更しません。
-
+大きなレスポンスを繰り返し保存すると容量を消費するため、必要な履歴はJSONファイル等へ退避してください。
 
 ## サーバー設定
 
-`test-server.py` の実行設定は、プロジェクト直下の `server-config.json` で変更できます。通常はPythonコードを直接修正する必要はありません。
+`server-config.json` でローカルサーバーとプロキシを設定します。
 
 ```json
 {
@@ -1011,35 +425,59 @@ APIのJSON構造を変えずに、トップレベルへ連続して定義され�
 }
 ```
 
-| 設定 | 内容 |
-| --- | --- |
-| `host` | ローカルHTTPサーバーの待受アドレス |
-| `port` | ローカルHTTPサーバーのポート番号 |
-| `web_root` | HTML等を配信するディレクトリ。相対パスはプロジェクト直下基準 |
+| 項目 | 意味 |
+|---|---|
+| `host` | ローカルサーバーの待受アドレス |
+| `port` | 待受ポート |
+| `web_root` | 公開するWebルート |
 | `default_document` | `/` で表示するHTML |
-| `proxy_path` | APIプロキシのローカルパス |
-| `proxy_timeout` | 対象APIへの通信タイムアウト秒数 |
-| `allowed_schemes` | プロキシ接続を許可するURLスキーム |
+| `proxy_path` | APIプロキシのパス |
+| `proxy_timeout` | API通信タイムアウト（秒） |
+| `allowed_schemes` | 許可するURLスキーム |
 | `allowed_hosts` | プロキシ接続を許可するAPIホスト |
-| `open_browser` | 起動時に既定ブラウザを自動で開くか |
+| `open_browser` | 起動時にブラウザを開くか |
 
-新しいAPIへアクセスする場合は、対象ホストを `allowed_hosts` に追加します。
+新しいAPIホストへ接続する場合は `allowed_hosts` に明示的に追加してください。ワイルドカードで任意ホストを許可する構成は、意図しない中継プロキシ化を避けるため推奨しません。
 
-```json
-"allowed_hosts": [
-  "jsonplaceholder.typicode.com",
-  "httpbin.org",
-  "api.example.com"
-]
+## 同梱サンプルAPI
+
+`api-assets.json` には、基本的なGET/POSTだけでなく、次の機能を確認できるサンプルを含めています。
+
+- ネストJSON・配列
+- 型指定・required / nullable
+- `select` / `radio` / Boolean入力
+- UUID・日時の `special`
+- Multipartファイル送信
+- Quoted-Printable
+- XML / Base64ファイル
+- Bearer認証
+
+公開テストAPIを利用するサンプルは、インターネット接続が必要です。
+
+## Git管理
+
+Pythonの実行・構文チェックで生成されるキャッシュはGit管理対象外です。
+
+```gitignore
+__pycache__/
+*.py[cod]
 ```
 
-セキュリティ上、`allowed_hosts` を無制限にする設定は用意していません。利用するAPIホストを明示的に登録してください。
+## License
 
-通常は `allowed_schemes` を `["https"]` のまま使用してください。ローカル開発用HTTP APIへ接続する必要がある場合だけ、明示的に `"http"` を追加します。
+Apache License 2.0
 
-```json
-"allowed_schemes": [
-  "https",
-  "http"
-]
-```
+Copyright 2026 rucola-salad
+
+
+### 未指定値と `default`
+
+API定義を新規表示したときは `default` を初期値として使用します。保存データ・ファイル・履歴を読み込むときは、保存JSONに存在しないパラメータを「未指定」として復元し、API定義の `default` は再適用しません。Boolean の3状態も `true` / `false` / キーなし（未指定）を区別します。
+
+
+
+### 保存データ・履歴とAPI定義の差異
+
+保存データ、インポートファイル、実行履歴を読み込む際は、現在の `api-assets.json` とパラメータ構成を比較します。API定義自体が存在する場合は、共通する項目の読み込みを継続し、差異があれば画面上部のステータス領域に警告を表示します。現在の定義にない保存項目は無視し、保存データにない現在の定義項目は未指定として扱います。ネストした項目は `Application.Applicant.OldField` のようなパスで表示します。
+
+保存時の `assetKey` に対応するAPI定義自体が存在しない場合は、従来どおりエラーとして読み込みを中止します。

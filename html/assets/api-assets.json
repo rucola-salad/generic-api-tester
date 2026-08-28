@@ -170,14 +170,16 @@
         "label": "リクエストID(UUID)",
         "type": "value",
         "special": "uuid",
-        "format": "default"
+        "format": "default",
+        "regenerate": "eachRequest"
       },
       {
         "name": "TraceId",
         "label": "トレースID(UUID compact)",
         "type": "value",
         "special": "uuid",
-        "format": "compact"
+        "format": "compact",
+        "regenerate": "eachRequest"
       },
       {
         "name": "RequestDateTime",
@@ -185,7 +187,8 @@
         "type": "value",
         "special": "datetime",
         "format": "yyyy-MM-dd HH:mm:ss.SSS",
-        "timezone": "local"
+        "timezone": "local",
+        "regenerate": "eachRequest"
       },
       {
         "name": "UtcDateTime",
@@ -193,7 +196,8 @@
         "type": "value",
         "special": "datetime",
         "format": "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'",
-        "timezone": "utc"
+        "timezone": "utc",
+        "regenerate": "eachRequest"
       }
     ]
   },
@@ -224,6 +228,52 @@
         "valueType": "number",
         "required": false,
         "default": 100
+      },
+      {
+        "name": "Department",
+        "label": "部署",
+        "type": "value",
+        "valueType": "string",
+        "inputType": "select",
+        "required": false,
+        "default": "SALES",
+        "options": [
+          {
+            "value": "SALES",
+            "label": "営業部"
+          },
+          {
+            "value": "DEV",
+            "label": "開発部"
+          },
+          {
+            "value": "ADMIN",
+            "label": "管理部"
+          }
+        ]
+      },
+      {
+        "name": "EmploymentType",
+        "label": "雇用区分",
+        "type": "value",
+        "valueType": "string",
+        "inputType": "radio",
+        "required": true,
+        "nullable": true,
+        "options": [
+          {
+            "value": "REGULAR",
+            "label": "正社員"
+          },
+          {
+            "value": "CONTRACT",
+            "label": "契約社員"
+          },
+          {
+            "value": "TEMPORARY",
+            "label": "派遣・その他"
+          }
+        ]
       },
       {
         "name": "Conditions",
