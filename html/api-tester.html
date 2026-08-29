@@ -2739,10 +2739,16 @@ function renderMarkdown(markdown){
   return html.join("\n");
 }
 
+let readmeLastFocusedElement=null;
+
 async function openReadme(){
+  readmeLastFocusedElement=document.activeElement;
+
   $("readmeModal").classList.add("open");
   $("readmeModal").setAttribute("aria-hidden","false");
   $("readmeContent").textContent="読み込み中...";
+
+  requestAnimationFrame(()=>$("closeReadme").focus());
 
   try{
     const response=await fetch("/readme?t="+Date.now());
@@ -2763,8 +2769,20 @@ async function openReadme(){
 }
 
 function closeReadme(){
-  $("readmeModal").classList.remove("open");
-  $("readmeModal").setAttribute("aria-hidden","true");
+  const modal=$("readmeModal");
+
+  if(document.activeElement && modal.contains(document.activeElement)){
+    document.activeElement.blur();
+  }
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+
+  if(readmeLastFocusedElement && document.contains(readmeLastFocusedElement)){
+    readmeLastFocusedElement.focus();
+  }
+
+  readmeLastFocusedElement=null;
 }
 
 $("readmeButton").onclick=openReadme;
@@ -3059,7 +3077,11 @@ function compareLoadedParamsWithAsset(assetParams, loadedParams){
     for(const def of active){
       const path=prefix+def.name;
       if(!Object.prototype.hasOwnProperty.call(obj,def.name)){
-        missingInLoaded.push(path);
+        // 任意項目は送信時に省略されるため、履歴に存在しなくても差異扱いしない。
+        // required:true の項目が欠けている場合だけ警告対象とする。
+        if(def.required===true){
+          missingInLoaded.push(path);
+        }
         continue;
       }
       const value=obj[def.name];
@@ -3154,8 +3176,11 @@ function makeDefaultSaveName(){
 
 
 let confirmResolver=null;
+let confirmLastFocusedElement=null;
 
 function showConfirmModal(message,title="確認",okLabel="OK"){
+  confirmLastFocusedElement=document.activeElement;
+
   $("confirmTitle").textContent=title;
   $("confirmMessage").textContent=message;
   $("confirmOk").textContent=okLabel;
@@ -3163,14 +3188,28 @@ function showConfirmModal(message,title="確認",okLabel="OK"){
   $("confirmModal").classList.add("open");
   $("confirmModal").setAttribute("aria-hidden","false");
 
+  requestAnimationFrame(()=>$("confirmOk").focus());
+
   return new Promise(resolve=>{
     confirmResolver=resolve;
   });
 }
 
 function closeConfirmModal(result){
-  $("confirmModal").classList.remove("open");
-  $("confirmModal").setAttribute("aria-hidden","true");
+  const modal=$("confirmModal");
+
+  if(document.activeElement && modal.contains(document.activeElement)){
+    document.activeElement.blur();
+  }
+
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+
+  if(confirmLastFocusedElement && document.contains(confirmLastFocusedElement)){
+    confirmLastFocusedElement.focus();
+  }
+
+  confirmLastFocusedElement=null;
 
   if(confirmResolver){
     const resolve=confirmResolver;
