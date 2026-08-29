@@ -12,5 +12,29 @@
     "jsonplaceholder.typicode.com",
     "httpbin.org"
   ],
-  "open_browser": true
+  "open_browser": true,
+  "logging": {
+    "file_enabled": true,
+    "file_level": "INFO",
+    "console_enabled": false,
+    "console_level": "INFO",
+    "file": "logs/api-tester.log",
+    "rotation": "size",
+    "date_suffix_format": "%Y-%m-%d",
+    "max_bytes": 5242880,
+    "backup_count": 5,
+    "request_headers": true,
+    "request_body": true,
+    "response_headers": true,
+    "response_body": true,
+    "max_body_length": 10000
+  },
+  "access_logging": {
+    "enabled": true,
+    "file": "logs/access.log",
+    "rotation": "daily",
+    "date_suffix_format": "%Y-%m-%d",
+    "max_bytes": 5242880,
+    "backup_count": 30
+  }
 }

@@ -481,3 +481,183 @@ API定義を新規表示したときは `default` を初期値として使用し
 保存データ、インポートファイル、実行履歴を読み込む際は、現在の `api-assets.json` とパラメータ構成を比較します。API定義自体が存在する場合は、共通する項目の読み込みを継続し、差異があれば画面上部のステータス領域に警告を表示します。現在の定義にない保存項目は無視し、保存データにない現在の定義項目は未指定として扱います。ネストした項目は `Application.Applicant.OldField` のようなパスで表示します。
 
 保存時の `assetKey` に対応するAPI定義自体が存在しない場合は、従来どおりエラーとして読み込みを中止します。
+
+
+## 通信ログ
+
+`test-server.py` の `/proxy` を経由するAPI通信は、Python側でログファイルに記録できます。設定は `server-config.json` の `logging` で変更します。
+
+```json
+"logging": {
+  "enabled": true,
+  "file": "logs/api-tester.log",
+  "rotation": "size",
+  "max_bytes": 5242880,
+  "backup_count": 5,
+  "request_headers": true,
+  "request_body": true,
+  "response_headers": true,
+  "response_body": true,
+  "max_body_length": 10000
+}
+```
+
+`max_bytes` を超えるとログファイルをローテーションし、`backup_count` で指定した世代数まで保持します。上記設定では約5MBごとにローテーションし、`api-tester.log.1` ～ `api-tester.log.5` を保持します。
+
+`Authorization`、`X-API-Key`、Cookieなどの認証・機密ヘッダーはログ上では `********` にマスクします。画像や動画などのバイナリBodyは内容を出力せず、バイト数のみを記録します。テキストBodyは `max_body_length` を超える部分を切り詰めます。
+
+`logs/` と `*.log` は `.gitignore` の対象です。
+
+
+### ログローテーション方式
+
+`logging.rotation` に `size` または `daily` を指定できます。`daily` は `api-tester.log.YYYY-MM-DD` 形式で日別に保持し、`backup_count` を超えた古い日付ログを削除します。
+
+
+
+### 日付ローテーションのファイル名フォーマット
+
+`rotation` が `daily` の場合は、`date_suffix_format` に Python の `strftime` 形式で日付部分を指定できます。
+
+```json
+"logging": {
+  "enabled": true,
+  "file": "logs/api-tester.log",
+  "rotation": "daily",
+  "date_suffix_format": "%Y%m%d",
+  "backup_count": 30
+}
+```
+
+この例では、ローテーション済みログは次のようになります。
+
+```text
+api-tester.log.20260829
+api-tester.log.20260830
+```
+
+例えば次の形式も指定できます。
+
+| `date_suffix_format` | ファイル名例 |
+|---|---|
+| `%Y-%m-%d` | `api-tester.log.2026-08-29` |
+| `%Y%m%d` | `api-tester.log.20260829` |
+| `%Y_%m_%d` | `api-tester.log.2026_08_29` |
+| `%Y.%m.%d` | `api-tester.log.2026.08.29` |
+
+`date_suffix_format` は `rotation: "daily"` の場合だけ使用します。`/` と `\\` はファイル名ではなくパスとして解釈されるため指定できません。日単位で確実に別ファイルになるよう、年・月・日を含む形式を推奨します。
+
+
+## アクセスログ
+
+詳細なリクエスト／レスポンスを記録する通信ログ（アプリログ）とは別に、PythonプロキシのAPI通信を1リクエスト1行で記録するアクセスログを出力できます。
+
+```json
+"access_logging": {
+  "enabled": true,
+  "file": "logs/access.log",
+  "rotation": "daily",
+  "date_suffix_format": "%Y-%m-%d",
+  "max_bytes": 5242880,
+  "backup_count": 30
+}
+```
+
+出力例:
+
+```text
+127.0.0.1 - - [29/Aug/2026:10:25:31 +0900] "POST https://example.com/api/card" 200 1842 236.4ms "Mozilla/5.0 ..."
+```
+
+アクセスログには、クライアントIP、HTTPメソッド、転送先URL、HTTPステータス、レスポンスサイズ、処理時間、User-Agentを記録します。リクエストBody、レスポンスBody、Authorization、API Keyなどの認証情報は出力しません。
+
+`rotation` はアプリログと同じく `size` または `daily` を指定できます。`daily` の場合は `date_suffix_format`、`size` の場合は `max_bytes` を使用します。`backup_count` は保持する世代数です。
+
+アプリログの `logging.enabled` とアクセスログの `access_logging.enabled` は独立しているため、必要なログだけを有効にできます。
+
+
+
+
+## アプリログの出力先とログレベル
+
+アプリログはファイルとコンソールを独立して有効／無効にでき、それぞれ別のログレベルを指定できます。
+
+```json
+"logging": {
+  "file_enabled": true,
+  "file_level": "INFO",
+  "console_enabled": false,
+  "console_level": "INFO",
+  "file": "logs/api-tester.log",
+  "rotation": "size",
+  "date_suffix_format": "%Y-%m-%d",
+  "max_bytes": 5242880,
+  "backup_count": 5,
+  "request_headers": true,
+  "request_body": true,
+  "response_headers": true,
+  "response_body": true,
+  "max_body_length": 10000
+}
+```
+
+指定できるログレベルは `DEBUG`、`INFO`、`WARNING`、`ERROR`、`CRITICAL` です。
+
+例えばファイルには詳細ログを残し、コンソールにはエラーだけ表示する場合:
+
+```json
+"logging": {
+  "file_enabled": true,
+  "file_level": "DEBUG",
+  "console_enabled": true,
+  "console_level": "ERROR"
+}
+```
+
+通常運用でコンソールへ起動情報だけを表示し、起動後のアプリログをファイルだけへ出す場合は:
+
+```json
+"logging": {
+  "file_enabled": true,
+  "file_level": "INFO",
+  "console_enabled": false,
+  "console_level": "INFO"
+}
+```
+
+起動時の `Generic API Tester`、Web root、URL、Proxy、Config、Schemes、Allowed、Browser、Timeout、`Press Ctrl+C to stop.` の表示はアプリログ設定とは別に、常にコンソールへ表示します。
+
+リクエスト／レスポンスのHeaderやBodyなど詳細な通信内容は `DEBUG` として扱います。通常のProxy処理は `INFO`、注意事項は `WARNING`、通信失敗やサーバー側エラーは `ERROR` を使用します。
+
+
+
+
+## Favicon
+
+Generic API Tester専用のfaviconを同梱しています。
+
+```text
+html/
+├─ favicon.ico
+├─ favicon-192.png
+├─ favicon-512.png
+└─ api-tester.html
+```
+
+`api-tester.html` から `/favicon.ico` とPNG版を参照します。PythonサーバーのWebルートが `html` のため、`GET /favicon.ico` で配信されます。
+
+
+
+### アプリログのHTTPヘッダー表示
+
+Request Headers / Response Headers は、確認しやすいように1ヘッダー1行で出力します。
+
+```text
+Headers:
+  Accept: application/json
+  Content-Type: application/json
+  User-Agent: GenericApiTester/1.0
+  Authorization: ********
+```
+
+Response Header に `Date` が含まれている場合も、そのまま記録します。`Authorization`、API Key、Cookieなど既存の機密ヘッダーのマスク処理は維持します。
