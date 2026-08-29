@@ -871,6 +871,7 @@ summary{
 "use strict";
 
 const ASSET_URL="./assets/api-assets.json";
+const LAST_ASSET_KEY="genericApiTester.lastAssetKey";
 let API_ASSETS={};
 const $=id=>document.getElementById(id);
 
@@ -2453,12 +2454,25 @@ function populateAssetSelect(){
 
 async function loadAssets(){
   $("status").textContent="API定義を読み込み中...";
+  const currentKey=$("assetSelect").value;
+
   const r=await fetch(ASSET_URL+"?t="+Date.now());
   if(!r.ok) throw new Error("api-assets.json 読込失敗: HTTP "+r.status);
+
   API_ASSETS=await r.json();
   populateAssetSelect();
-  const first=Object.keys(API_ASSETS)[0];
-  if(first){ $("assetSelect").value=first; loadAsset(first); }
+
+  const storedKey=localStorage.getItem(LAST_ASSET_KEY);
+  const selectedKey=
+    (currentKey && API_ASSETS[currentKey] ? currentKey : "") ||
+    (storedKey && API_ASSETS[storedKey] ? storedKey : "") ||
+    Object.keys(API_ASSETS)[0] ||
+    "";
+
+  if(selectedKey){
+    $("assetSelect").value=selectedKey;
+    loadAsset(selectedKey);
+  }
 }
 
 
@@ -3720,7 +3734,11 @@ async function clearHistoryEntries(){
     "実行履歴をすべて削除しました";
 }
 
-$("assetSelect").onchange=()=>loadAsset($("assetSelect").value);
+$("assetSelect").onchange=()=>{
+  const assetKey=$("assetSelect").value;
+  loadAsset(assetKey);
+  localStorage.setItem(LAST_ASSET_KEY,assetKey);
+};
 $("reloadAssets").onclick=async()=>{try{await loadAssets();}catch(e){$("status").textContent="定義読込エラー: "+e.message;}};
 $("preview").onclick=showPreview;
 
